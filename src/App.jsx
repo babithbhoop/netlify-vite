@@ -156,14 +156,22 @@ function Slide2Visual() {
           {[100,200,300,400,500,600,700,800].map(x => <line key={x} x1={x} y1="0" x2={x} y2="195" stroke="#2563EB" strokeWidth="0.5"/>)}
         </svg>
 
-        {/* Simplified continent blobs */}
-        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.25 }} viewBox="0 0 100 50" preserveAspectRatio="none">
-          <ellipse cx="18" cy="30" rx="12" ry="8" fill="#1d4ed8"/>
-          <ellipse cx="42" cy="22" rx="8" ry="6" fill="#1d4ed8"/>
-          <ellipse cx="55" cy="30" rx="12" ry="10" fill="#1d4ed8"/>
-          <ellipse cx="78" cy="28" rx="8" ry="9" fill="#1d4ed8"/>
-          <ellipse cx="27" cy="50" rx="6" ry="5" fill="#1d4ed8"/>
-          <ellipse cx="85" cy="48" rx="4" ry="3" fill="#1d4ed8"/>
+        {/* Simplified continent outlines */}
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.35 }} viewBox="0 0 900 450" preserveAspectRatio="xMidYMid meet">
+          {/* North America */}
+          <path d="M120,80 L150,60 L190,55 L220,65 L240,80 L235,100 L250,110 L260,130 L245,145 L230,150 L225,170 L210,185 L195,195 L180,200 L165,210 L155,230 L145,235 L140,220 L130,210 L115,200 L105,185 L95,170 L90,150 L95,130 L100,115 L110,100 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* South America */}
+          <path d="M200,250 L215,245 L230,250 L245,265 L250,285 L255,310 L250,335 L240,355 L225,370 L210,380 L200,375 L195,355 L190,335 L185,310 L188,290 L192,270 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* Europe */}
+          <path d="M380,70 L400,65 L420,70 L435,80 L440,95 L435,110 L425,120 L415,125 L400,130 L385,125 L375,115 L370,100 L375,85 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* Africa */}
+          <path d="M400,160 L420,150 L445,155 L460,170 L470,195 L475,220 L470,250 L460,275 L445,295 L425,305 L410,300 L400,285 L395,260 L390,235 L385,210 L388,185 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* Asia */}
+          <path d="M470,60 L510,50 L560,55 L610,65 L660,60 L700,70 L730,85 L740,110 L735,135 L720,155 L700,165 L670,170 L640,175 L610,180 L580,175 L550,165 L520,155 L500,145 L485,130 L475,110 L468,85 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* India subcontinent */}
+          <path d="M565,175 L580,180 L590,200 L585,225 L575,245 L560,255 L550,245 L545,225 L548,205 L555,190 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
+          {/* Australia */}
+          <path d="M700,290 L730,280 L760,285 L780,300 L785,320 L775,340 L755,350 L730,345 L710,335 L700,315 L698,300 Z" fill="#1d4ed8" stroke="#2563EB" strokeWidth="1"/>
         </svg>
 
         {/* Pins */}
