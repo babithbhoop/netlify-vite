@@ -138,6 +138,8 @@ const mapPathsHtml = worldMapSvgRaw.replace(/[\s\S]*?(<g[\s\S]*?<\/g>)[\s\S]*/, 
 
 function Slide2Visual() {
   // Pin coordinates in the SVG viewBox space (30.767 241.591 784.077 458.627)
+  // Converted to percentages: x% = (sx - 30.767) / 784.077 * 100, y% = (sy - 241.591) / 458.627 * 100
+  const VB = { x: 30.767, y: 241.591, w: 784.077, h: 458.627 };
   const laws = [
     { region: "India", flag: "🇮🇳", name: "DPDP Act", year: "2023/25", fine: "₹250 Cr", status: "Enforcing", color: "#f97316", sx: 595, sy: 470, desc: "Digital Personal Data Protection Act. 7 Governance Sutras. New AI Safety Institute announced Feb 2026." },
     { region: "EU", flag: "🇪🇺", name: "EU AI Act", year: "2024", fine: "€35M/7%", status: "Live Aug 2025", color: "#2563EB", sx: 430, sy: 395, desc: "World's first comprehensive AI law. Risk tiers: Unacceptable, High, Limited, Minimal. Annex IV documentation mandatory." },
@@ -150,37 +152,41 @@ function Slide2Visual() {
   ];
 
   const [active, setActive] = useState(null);
-  const PR = 16; // pin radius in SVG units
 
   return (
     <div style={{ width: "100%", marginTop: 6, position: "relative" }}>
-      {/* Single SVG: map + grid + pins all share one coordinate system */}
       <div style={{ position: "relative", width: "100%", height: 195, background: "linear-gradient(135deg,#0a1628 0%,#0d1f3c 100%)", borderRadius: 12, border: "1px solid #1e3a5f", overflow: "hidden" }}>
+        {/* Map SVG — stretched to fill with preserveAspectRatio="none" */}
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
              viewBox="30.767 241.591 784.077 458.627" preserveAspectRatio="none">
           {/* Grid lines */}
           {[300,350,400,450,500,550,600,650].map(y => <line key={`h${y}`} x1="30.767" y1={y} x2="814.844" y2={y} stroke="#2563EB" strokeWidth="1" opacity="0.15"/>)}
           {[130,230,330,430,530,630,730].map(x => <line key={`v${x}`} x1={x} y1="241.591" x2={x} y2="700.218" stroke="#2563EB" strokeWidth="1" opacity="0.15"/>)}
-
           {/* World map country paths */}
           <g opacity="0.45" dangerouslySetInnerHTML={{ __html: mapPathsHtml }} />
-
-          {/* Pin circles — rendered in SVG so they share the exact coordinate space */}
-          {laws.map((l, i) => (
-            <g key={i} style={{ cursor: "pointer" }} onClick={() => setActive(active === i ? null : i)}>
-              <circle cx={l.sx} cy={l.sy} r={PR} fill={`${l.color}22`} stroke={l.color} strokeWidth="2" />
-              <text x={l.sx} y={l.sy + 5} textAnchor="middle" fontSize="14" fill="white">{l.flag}</text>
-              {active !== i && (
-                <g>
-                  <rect x={l.sx - l.name.length * 3.2} y={l.sy - PR - 16} width={l.name.length * 6.4} height={14} rx="3" fill="#0a1628dd" />
-                  <text x={l.sx} y={l.sy - PR - 6} textAnchor="middle" fontSize="8" fontWeight="800" fill={l.color}>{l.name}</text>
-                </g>
-              )}
-            </g>
-          ))}
         </svg>
 
-        {/* Tooltip (HTML overlay for rich text) */}
+        {/* HTML pins — positioned with percentages derived from SVG coords, so they stay round */}
+        {laws.map((l, i) => {
+          const xPct = ((l.sx - VB.x) / VB.w * 100) + "%";
+          const yPct = ((l.sy - VB.y) / VB.h * 100) + "%";
+          return (
+            <div key={i}
+              onClick={() => setActive(active === i ? null : i)}
+              style={{ position: "absolute", left: xPct, top: yPct, transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: `${l.color}22`, border: `2px solid ${l.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "transform 0.15s", transform: active === i ? "scale(1.3)" : "scale(1)" }}>
+                {l.flag}
+              </div>
+              {active !== i && (
+                <div style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 8, fontWeight: 800, color: l.color, background: "#0a1628dd", padding: "1px 4px", borderRadius: 3 }}>
+                  {l.name}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Tooltip */}
         {active !== null && (
           <div style={{ position: "absolute", top: 4, right: 4, width: 240, background: "#0f172a", border: `1px solid ${laws[active].color}`, borderRadius: 10, padding: 10, zIndex: 20 }}>
             <div style={{ fontSize: 10, color: laws[active].color, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>{laws[active].flag} {laws[active].region} · {laws[active].year}</div>
