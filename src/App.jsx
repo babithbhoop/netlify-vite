@@ -1492,7 +1492,7 @@ const slides = [
 // SURVEY MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 const SURVEY_STORAGE_KEY = "survey_state"; // { ts, pattern: [sorted slide indices] }
-const SURVEY_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7-day periodic cooldown
+const SURVEY_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24-hour cooldown after submission
 const SURVEY_PATTERN_DIFF_THRESHOLD = 3; // trigger if 3+ slides differ from last session
 
 const SURVEY_QUESTIONS = [
