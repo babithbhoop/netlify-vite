@@ -135,14 +135,14 @@ function Slide1Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide2Visual() {
   const laws = [
-    { region: "India", flag: "🇮🇳", name: "DPDP Act", year: "2023/25", fine: "₹250 Cr", status: "Enforcing", color: "#f97316", x: "62%", y: "45%", desc: "Digital Personal Data Protection Act. 7 Governance Sutras. New AI Safety Institute announced Feb 2026." },
-    { region: "EU", flag: "🇪🇺", name: "EU AI Act", year: "2024", fine: "€35M/7%", status: "Live Aug 2025", color: "#2563EB", x: "44%", y: "28%", desc: "World's first comprehensive AI law. Risk tiers: Unacceptable, High, Limited, Minimal. Annex IV documentation mandatory." },
-    { region: "USA", flag: "🇺🇸", name: "EO 14110 + NIST RMF", year: "2023", fine: "Sector-based", status: "Active", color: "#10b981", x: "18%", y: "38%", desc: "Executive Order on Safe AI. NIST AI Risk Management Framework 1.0. State-level laws in CA, TX, NY." },
-    { region: "UK", flag: "🇬🇧", name: "AI Safety Institute", year: "2023", fine: "Context-based", status: "Operational", color: "#8b5cf6", x: "41%", y: "24%", desc: "Bletchley Declaration signed by 28 nations. World's first AI Safety Institute. Frontier AI safety evaluations." },
-    { region: "China", flag: "🇨🇳", name: "Generative AI Regs", year: "2023", fine: "State authority", status: "Enforcing", color: "#ef4444", x: "78%", y: "38%", desc: "Mandatory safety assessments for GenAI services. Government approval before public launch. Algorithmic recommendation rules." },
-    { region: "Brazil", flag: "🇧🇷", name: "AI Bill (PL 2338)", year: "2025", fine: "R$50M", status: "Enacted", color: "#06b6d4", x: "28%", y: "62%", desc: "Comprehensive AI regulation modeled after EU AI Act. Human oversight mandatory for high-risk systems. Data rights for AI training." },
-    { region: "Canada", flag: "🇨🇦", name: "AIDA (Bill C-27)", year: "2024", fine: "CAD$25M", status: "Advancing", color: "#eab308", x: "16%", y: "25%", desc: "Artificial Intelligence and Data Act. High-impact AI system registration. International Data Transfer controls." },
-    { region: "Japan", flag: "🇯🇵", name: "AI Guidelines", year: "2024", fine: "Voluntary+", status: "Adopted", color: "#f472b6", x: "84%", y: "35%", desc: "Hiroshima AI Process guiding principles. Voluntary code of conduct for advanced AI. G7 framework alignment." },
+    { region: "India", flag: "🇮🇳", name: "DPDP Act", year: "2023/25", fine: "₹250 Cr", status: "Enforcing", color: "#f97316", x: "72%", y: "50%", desc: "Digital Personal Data Protection Act. 7 Governance Sutras. New AI Safety Institute announced Feb 2026." },
+    { region: "EU", flag: "🇪🇺", name: "EU AI Act", year: "2024", fine: "€35M/7%", status: "Live Aug 2025", color: "#2563EB", x: "50%", y: "33%", desc: "World's first comprehensive AI law. Risk tiers: Unacceptable, High, Limited, Minimal. Annex IV documentation mandatory." },
+    { region: "USA", flag: "🇺🇸", name: "EO 14110 + NIST RMF", year: "2023", fine: "Sector-based", status: "Active", color: "#10b981", x: "16%", y: "37%", desc: "Executive Order on Safe AI. NIST AI Risk Management Framework 1.0. State-level laws in CA, TX, NY." },
+    { region: "UK", flag: "🇬🇧", name: "AI Safety Institute", year: "2023", fine: "Context-based", status: "Operational", color: "#8b5cf6", x: "47%", y: "29%", desc: "Bletchley Declaration signed by 28 nations. World's first AI Safety Institute. Frontier AI safety evaluations." },
+    { region: "China", flag: "🇨🇳", name: "Generative AI Regs", year: "2023", fine: "State authority", status: "Enforcing", color: "#ef4444", x: "80%", y: "39%", desc: "Mandatory safety assessments for GenAI services. Government approval before public launch. Algorithmic recommendation rules." },
+    { region: "Brazil", flag: "🇧🇷", name: "AI Bill (PL 2338)", year: "2025", fine: "R$50M", status: "Enacted", color: "#06b6d4", x: "31%", y: "72%", desc: "Comprehensive AI regulation modeled after EU AI Act. Human oversight mandatory for high-risk systems. Data rights for AI training." },
+    { region: "Canada", flag: "🇨🇦", name: "AIDA (Bill C-27)", year: "2024", fine: "CAD$25M", status: "Advancing", color: "#eab308", x: "18%", y: "19%", desc: "Artificial Intelligence and Data Act. High-impact AI system registration. International Data Transfer controls." },
+    { region: "Japan", flag: "🇯🇵", name: "AI Guidelines", year: "2024", fine: "Voluntary+", status: "Adopted", color: "#f472b6", x: "88%", y: "37%", desc: "Hiroshima AI Process guiding principles. Voluntary code of conduct for advanced AI. G7 framework alignment." },
   ];
 
   const [active, setActive] = useState(null);
@@ -158,7 +158,7 @@ function Slide2Visual() {
         </svg>
 
         {/* World map background */}
-        <img src={worldMapUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", opacity: 0.4, pointerEvents: "none" }} />
+        <img src={worldMapUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "fill", opacity: 0.45, pointerEvents: "none" }} />
 
         {/* Pins */}
         {laws.map((l, i) => (
