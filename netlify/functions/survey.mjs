@@ -1,6 +1,4 @@
 // Netlify serverless function: receives anonymous survey responses, sends email via Resend
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-const RECIPIENT_EMAIL = process.env.SURVEY_RECIPIENT_EMAIL || "";
 
 export default async (req) => {
   // CORS preflight
@@ -17,6 +15,10 @@ export default async (req) => {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
+
+  // Read env vars at invocation time (not module scope) so they pick up Netlify env config
+  const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+  const RECIPIENT_EMAIL = process.env.SURVEY_RECIPIENT_EMAIL || "";
 
   if (!RESEND_API_KEY || !RECIPIENT_EMAIL) {
     return new Response(JSON.stringify({ error: "Email service not configured" }), {
