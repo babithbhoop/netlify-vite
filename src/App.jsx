@@ -98,9 +98,9 @@ function Slide1Visual() {
   const { articles, live, fetchedAt } = useWeeklyNews();
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Live feed indicator */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, padding: "4px 8px", background: "#0f172a", borderRadius: 6, border: "1px solid #1e293b" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, padding: "4px 8px", background: "#0f172a", borderRadius: 6, border: "1px solid #1e293b", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#10b981" : "#eab308", boxShadow: live ? "0 0 6px #10b981" : "none" }} />
           <span style={{ fontSize: 9, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
@@ -114,7 +114,7 @@ function Slide1Visual() {
         )}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, flex: 1 }}>
         {articles.slice(0, 6).map((n, i) => {
           const color = n.tagColor || NEWS_TAG_COLORS[i % NEWS_TAG_COLORS.length];
           const IconComp = n.isIndia ? Icons.Globe : NEWS_ICONS[i % NEWS_ICONS.length];
@@ -167,8 +167,8 @@ function Slide2Visual() {
   const [active, setActive] = useState(null);
 
   return (
-    <div style={{ width: "100%", marginTop: 6, position: "relative" }}>
-      <div style={{ position: "relative", width: "100%", height: 195, background: "linear-gradient(135deg,#0a1628 0%,#0d1f3c 100%)", borderRadius: 12, border: "1px solid #1e3a5f", overflow: "hidden" }}>
+    <div style={{ width: "100%", marginTop: 6, position: "relative", flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", width: "100%", flex: 1, background: "linear-gradient(135deg,#0a1628 0%,#0d1f3c 100%)", borderRadius: 12, border: "1px solid #1e3a5f", overflow: "hidden" }}>
         {/* Map SVG — stretched to fill with preserveAspectRatio="none" */}
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
              viewBox="30.767 241.591 784.077 458.627" preserveAspectRatio="none">
@@ -216,7 +216,7 @@ function Slide2Visual() {
       </div>
 
       {/* Bottom stat strip */}
-      <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+      <div style={{ display: "flex", gap: 6, marginTop: 6, flexShrink: 0 }}>
         {[["110+","nations at India AI Summit 2026","#f97316"],["63","countries signed Paris AI Declaration","#2563EB"],["35+","active national AI regulatory frameworks","#10b981"],["4th","global AI summit in series (Bletchley > Seoul > Paris > Delhi)","#8b5cf6"]].map(([v,l,c],i) => (
           <div key={i} style={{ flex: 1, borderRadius: 8, padding: "6px 8px", background: `${c}0d`, border: `1px solid ${c}30`, textAlign: "center" }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: c }}>{v}</div>
@@ -298,7 +298,7 @@ function Slide3Visual() {
 
   const c = cases[active];
   return (
-    <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 6, height: 215 }}>
+    <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 6, flex: 1 }}>
       {/* Left: case selector */}
       <div style={{ width: 160, display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
         {cases.map((cs, i) => (
@@ -399,8 +399,8 @@ function Slide4Visual() {
   ];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 7, height: 190 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 7, flex: 1 }}>
         {quadrants.map((q, i) => (
           <div key={i}
             onClick={() => setSel(sel === i ? null : i)}
@@ -424,7 +424,7 @@ function Slide4Visual() {
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#475569", marginTop: 4, padding: "0 4px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#475569", marginTop: 4, padding: "0 4px", flexShrink: 0 }}>
         <span>← LOW PROBABILITY</span>
         <span style={{ color: "#64748b" }}>Click any quadrant to expand real examples</span>
         <span>HIGH PROBABILITY →</span>
@@ -453,7 +453,7 @@ function Slide5Visual() {
   ];
 
   return (
-    <div style={{ display: "flex", gap: 10, marginTop: 8, width: "100%" }}>
+    <div style={{ display: "flex", gap: 10, marginTop: 8, width: "100%", flex: 1 }}>
       {pillars.map((p, i) => (
         <div key={i} style={{ flex: 1, borderRadius: 14, padding: "14px 12px", border: `1px solid ${p.color}`, background: `${p.color}0d` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -533,9 +533,9 @@ function Slide6Visual() {
   const s = stages[step];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Pipeline bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, flexShrink: 0 }}>
         {stages.map((st, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, flex: 1 }}>
             <div onClick={() => setStep(i)}
@@ -553,7 +553,7 @@ function Slide6Visual() {
       </div>
 
       {/* Detail panel */}
-      <div style={{ borderRadius: 12, border: `1px solid ${s.color}`, padding: 12, background: `${s.color}08`, display: "flex", gap: 12 }}>
+      <div style={{ borderRadius: 12, border: `1px solid ${s.color}`, padding: 12, background: `${s.color}08`, display: "flex", gap: 12, flex: 1 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, color: s.color, marginBottom: 4 }}>Stage {step + 1}: {s.label}</div>
           <div style={{ fontSize: 12, color: "#e2e8f0", marginBottom: 8 }}>{s.what}</div>
@@ -572,7 +572,7 @@ function Slide6Visual() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+      <div style={{ display: "flex", gap: 8, marginTop: 8, flexShrink: 0 }}>
         <button onClick={startAnim} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #2563EB", background: running ? "#1e3a8a" : "#2563EB", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
           <Icons.Play s={12} c="#fff" /> {running ? "Running..." : "Animate Pipeline"}
         </button>
@@ -591,13 +591,13 @@ function Slide6Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide7Visual() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8, width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8, width: "100%", flex: 1 }}>
       {[
         ["LIME", "Local Interpretable Model-Agnostic Explanations", "Creates a simple linear approximation around ONE specific prediction. Perturbs input features and observes output changes.", "Speed. Works on any model. No retraining needed.", "Only locally faithful. May contradict global model behaviour.", 65, "#2563EB", "Use for: Quick customer-level decision audits"],
         ["SHAP", "SHapley Additive exPlanations", "Distributes a prediction's output across features using Shapley values from cooperative game theory. Every feature gets a mathematically fair credit/blame share.", "Theoretically grounded. Consistent global + local explanations.", "Computationally heavy on large models. Requires all features.", 88, "#7c3aed", "Use for: Regulatory submissions, model debugging, retraining signals"],
         ["Counterfactual", "Minimum-change explanations", "Answers: What is the smallest change to this input that would flip the output? E.g. 'If your income were Rs 500 higher, loan approved.'", "Most legally actionable. Directly answers 'What must I do to get a different outcome?'", "May not reflect causal reality. Can expose model to gaming.", 76, "#059669", "Use for: Customer dispute responses, DPDP Act right-to-explanation compliance"],
       ].map(([n, full, how, pro, con, bar, c, usecase], i) => (
-        <div key={i} style={{ borderRadius: 10, padding: 10, border: "1px solid #1e293b", background: "#0f1623", display: "flex", gap: 10 }}>
+        <div key={i} style={{ borderRadius: 10, padding: 10, border: "1px solid #1e293b", background: "#0f1623", display: "flex", gap: 10, flex: 1 }}>
           <div style={{ width: 70, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: c }}>{n}</div>
             <div style={{ width: "100%", background: "#1e293b", borderRadius: 9999, height: 6 }}>
@@ -627,7 +627,7 @@ function Slide8Visual() {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <div style={{ display: "flex", gap: 10, marginTop: 8, width: "100%" }}>
+    <div style={{ display: "flex", gap: 10, marginTop: 8, width: "100%", flex: 1 }}>
       {/* Dataset explanation */}
       <div style={{ flex: 1.2, borderRadius: 12, border: "2px solid #EA580C", padding: 12, background: "rgba(234,88,12,0.07)" }}>
         <div style={{ color: "#fb923c", fontWeight: 900, fontSize: 10, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>The Dataset</div>
@@ -718,8 +718,8 @@ function Slide9Visual() {
   ];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "flex", gap: 10 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 10, flex: 1 }}>
         {/* Left: explainer */}
         <div style={{ flex: 1.1 }}>
           <div style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.6, marginBottom: 8 }}>
@@ -830,8 +830,8 @@ function Slide10Visual() {
   const s = stages[activeStage];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "flex", gap: 5, marginBottom: 8 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 5, marginBottom: 8, flexShrink: 0 }}>
         {stages.map((st, i) => (
           <div key={i} onClick={() => setActiveStage(i)}
             style={{ flex: 1, borderRadius: 8, padding: "6px 4px", border: `1px solid ${i <= activeStage ? st.color : "#1e293b"}`, background: i === activeStage ? `${st.color}20` : "#0f0f0f", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}>
@@ -841,8 +841,8 @@ function Slide10Visual() {
         ))}
       </div>
 
-      <div style={{ borderRadius: 12, border: `1px solid ${s.color}`, padding: 12, background: `${s.color}08` }}>
-        <div style={{ display: "flex", gap: 12 }}>
+      <div style={{ borderRadius: 12, border: `1px solid ${s.color}`, padding: 12, background: `${s.color}08`, flex: 1 }}>
+        <div style={{ display: "flex", gap: 12, height: "100%" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, color: s.color, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 }}>Stage {s.n}: {s.label}</div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
@@ -910,7 +910,7 @@ function Slide11Visual() {
 
   const t = threats[card];
   return (
-    <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 6 }}>
+    <div style={{ display: "flex", gap: 10, width: "100%", marginTop: 6, flex: 1 }}>
       {/* Card selector */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 140, flexShrink: 0 }}>
         {threats.map((th, i) => (
@@ -998,9 +998,9 @@ function Slide12Visual() {
   ];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
       {/* Level selector */}
-      <div style={{ display: "flex", gap: 5, marginBottom: 8 }}>
+      <div style={{ display: "flex", gap: 5, marginBottom: 8, flexShrink: 0 }}>
         {levels.map((l, i) => (
           <div key={i} onClick={() => setCol(i)}
             style={{ flex: 1, borderRadius: 9, padding: "7px 6px", border: `1px solid ${i === col ? l.color : "#1e293b"}`, background: i === col ? `${l.color}18` : "#0a0a0a", cursor: "pointer", textAlign: "center" }}>
@@ -1012,7 +1012,7 @@ function Slide12Visual() {
       </div>
 
       {/* Matrix rows */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1 }}>
         {rows.map((r, ri) => (
           <div key={ri} style={{ display: "flex", gap: 5, alignItems: "stretch" }}>
             <div style={{ width: 88, flexShrink: 0, display: "flex", alignItems: "center", borderRadius: 7, background: "#1e293b", padding: "4px 8px" }}>
@@ -1028,7 +1028,7 @@ function Slide12Visual() {
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 6, fontSize: 9, color: "#475569", textAlign: "center" }}>
+      <div style={{ marginTop: 6, fontSize: 9, color: "#475569", textAlign: "center", flexShrink: 0 }}>
         {levels[col].who} · Click any column or level to compare
       </div>
     </div>
@@ -1059,12 +1059,12 @@ function Slide13Visual() {
   };
 
   return (
-    <div style={{ width: "100%", marginTop: 6, borderRadius: 12, border: "1px solid #1d4ed8", overflow: "hidden" }}>
-      <div style={{ padding: "8px 14px", background: "rgba(37,99,235,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ width: "100%", marginTop: 6, borderRadius: 12, border: "1px solid #1d4ed8", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "8px 14px", background: "rgba(37,99,235,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <span style={{ fontSize: 11, fontWeight: 900, color: "#93c5fd", textTransform: "uppercase", letterSpacing: 1.5 }}>Sample Model Card: LoanScore-v2.1</span>
         <span style={{ fontSize: 9, color: "#fb923c", background: "#431407", padding: "2px 8px", borderRadius: 4, fontWeight: 700, border: "1px solid #7c2d12" }}>EU AI Act HIGH RISK</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxHeight: 210, overflowY: "auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", flex: 1, overflowY: "auto" }}>
         {Object.entries(card).map(([k, v], i) => (
           <div key={i} style={{ padding: "6px 12px", borderBottom: "1px solid #0f172a", borderRight: i % 2 === 0 ? "1px solid #0f172a" : "none", background: i % 4 < 2 ? "#0a0f1a" : "#0d1421" }}>
             <div style={{ fontSize: 9, color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 }}>{k}</div>
@@ -1072,7 +1072,7 @@ function Slide13Visual() {
           </div>
         ))}
       </div>
-      <div style={{ padding: "6px 14px", background: "rgba(234,88,12,0.1)", fontSize: 9, color: "#fb923c" }}>
+      <div style={{ padding: "6px 14px", background: "rgba(234,88,12,0.1)", fontSize: 9, color: "#fb923c", flexShrink: 0 }}>
         This is a take-away template. Fill this for every model you deploy. Under EU AI Act Annex IV and DPDP Act, this documentation is not optional for high-risk systems.
       </div>
     </div>
@@ -1110,8 +1110,8 @@ function Slide14Visual() {
   const startSim = () => { setPhase(0); setRunning(true); };
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexShrink: 0 }}>
         <button onClick={startSim}
           style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid #ef4444", background: running ? "#7f1d1d" : "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
           <Icons.Play s={12} c="#fff" /> {running ? "Attack in Progress..." : "Run Attack Simulation"}
@@ -1125,7 +1125,7 @@ function Slide14Visual() {
         <span style={{ fontSize: 10, color: "#475569" }}>Simulated LLM red-team against a financial services chatbot</span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 200, overflowY: "auto" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, overflowY: "auto" }}>
         {scenario.map((sc, i) => (
           <div key={i} style={{
             borderRadius: 9, padding: "8px 12px", border: `1px solid ${i <= phase ? sc.color + "60" : "#1e293b"}`,
@@ -1152,7 +1152,7 @@ function Slide14Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide15Visual() {
   return (
-    <div style={{ display: "flex", gap: 14, marginTop: 10, width: "100%" }}>
+    <div style={{ display: "flex", gap: 14, marginTop: 10, width: "100%", flex: 1 }}>
       <div style={{ flex: 1, borderRadius: 12, border: "2px solid #EA580C", padding: 14, background: "rgba(234,88,12,0.07)" }}>
         <div style={{ color: "#fb923c", fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, marginBottom: 8 }}>Scenario</div>
         <div style={{ fontSize: 12, color: "#e5e7eb", lineHeight: 1.6 }}>Your company deploys an <strong style={{ color: "#fb923c" }}>LLM-based customer service chatbot</strong> for a <strong style={{ color: "#fff" }}>financial services platform</strong>. It handles account queries, loan pre-screening, complaints, and FAQ. A regulator wants a risk assessment by next Monday.</div>
@@ -1233,8 +1233,8 @@ function Slide16Visual() {
   ];
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 8, flexShrink: 0 }}>
         {milestones.map((m, i) => (
           <div key={i} onClick={() => setOpen(i)}
             style={{ flex: 1, borderRadius: 8, padding: "6px 4px", border: `1px solid ${i <= open ? m.color : "#1e293b"}`, background: i === open ? `${m.color}20` : "#0a0a0a", cursor: "pointer", textAlign: "center" }}>
@@ -1243,7 +1243,7 @@ function Slide16Visual() {
           </div>
         ))}
       </div>
-      <div style={{ borderRadius: 12, border: `1px solid ${milestones[open].color}`, padding: 12, background: `${milestones[open].color}08` }}>
+      <div style={{ borderRadius: 12, border: `1px solid ${milestones[open].color}`, padding: 12, background: `${milestones[open].color}08`, flex: 1 }}>
         <div style={{ fontSize: 10, color: milestones[open].color, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8 }}>
           {milestones[open].time}: {milestones[open].label}
         </div>
@@ -1280,8 +1280,8 @@ function Slide17Visual() {
   const score = Object.values(checked).filter(Boolean).length;
 
   return (
-    <div style={{ width: "100%", marginTop: 6 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, flex: 1 }}>
         {items.map((item, i) => (
           <div key={i} onClick={() => setChecked(c => ({ ...c, [i]: !c[i] }))}
             style={{ display: "flex", alignItems: "flex-start", gap: 8, borderRadius: 8, padding: "8px 10px", border: `1px solid ${checked[i] ? "#10b981" : "#1e293b"}`, background: checked[i] ? "#10b98110" : "#080808", cursor: "pointer", transition: "all 0.15s" }}>
@@ -1292,7 +1292,7 @@ function Slide17Visual() {
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
         <div style={{ flex: 1, height: 8, background: "#1e293b", borderRadius: 9999 }}>
           <div style={{ width: `${score * 10}%`, height: 8, borderRadius: 9999, background: score >= 8 ? "#10b981" : score >= 5 ? "#eab308" : "#ef4444", transition: "width 0.3s" }} />
         </div>
@@ -1309,7 +1309,7 @@ function Slide17Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide18Visual() {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10, width: "100%" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: 10, marginTop: 10, width: "100%", flex: 1 }}>
       {[
         [Icons.Globe, "Regulatory Convergence", "#2563EB", [
           "DPDP enforcement escalation: first ₹250Cr fine expected in 2026",
@@ -1387,7 +1387,7 @@ function Slide19Visual() {
   ];
 
   return (
-    <div style={{ display: "flex", gap: 7, marginTop: 10, width: "100%" }}>
+    <div style={{ display: "flex", gap: 7, marginTop: 10, width: "100%", flex: 1 }}>
       {tools.map((cat, i) => (
         <div key={i} style={{ flex: 1, borderRadius: 12, padding: "10px 8px", border: `1px solid ${cat.color}`, background: `${cat.color}0a` }}>
           <div style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, color: cat.color, marginBottom: 8, textAlign: "center" }}>{cat.cat}</div>
@@ -1416,8 +1416,8 @@ function Slide19Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide20Visual() {
   return (
-    <div style={{ marginTop: 10, width: "100%", borderRadius: 12, border: "1px solid #1d4ed8", padding: 20, background: "rgba(37,99,235,0.06)" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ marginTop: 10, width: "100%", borderRadius: 12, border: "1px solid #1d4ed8", padding: 20, background: "rgba(37,99,235,0.06)", flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         {[
           "I will not deploy a system I cannot explain.",
           "I will not use data whose provenance I cannot verify.",
@@ -1432,7 +1432,7 @@ function Slide20Visual() {
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 14, padding: "8px 12px", background: "#0f172a", borderRadius: 8, border: "1px solid #1e3a8a" }}>
+      <div style={{ marginTop: 14, padding: "8px 12px", background: "#0f172a", borderRadius: 8, border: "1px solid #1e3a8a", flexShrink: 0 }}>
         <div style={{ fontSize: 10, color: "#475569", lineHeight: 1.6 }}>
           ACM Code of Ethics (2024): "Computing professionals have a duty to actively reflect on the negative consequences their work may have, and raise concerns about potential harms."
           <br/>Mrinank Sharma, Anthropic (Feb 9, 2026): "Throughout my time here, I repeatedly saw how hard it is to truly let our values govern our actions."
@@ -1555,7 +1555,7 @@ export default function PresentationViewer() {
           <h1 style={{ margin: "0 0 1px 0", fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1, fontSize: "clamp(1rem, 2.4vw, 1.75rem)", color: isActivity ? "#fb923c" : "#f1f5f9", flexShrink: 0 }}>{slide.title}</h1>
           <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: isActivity ? "#fdba74" : "#64748b", flexShrink: 0 }}>{slide.subtitle}</p>
           <div style={{ height: 1, margin: "6px 0", background: `linear-gradient(to right,${borderColor},transparent)`, flexShrink: 0 }} />
-          <div style={{ flex: 1, overflow: "hidden", minHeight: 0 }}><SlideVisual type={slide.visual} /></div>
+          <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column" }}><SlideVisual type={slide.visual} /></div>
         </div>
       </div>
 
