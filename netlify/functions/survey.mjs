@@ -116,33 +116,37 @@ export default async (req) => {
     `;
 
     // --- Append to Google Sheet (best-effort, don't block email) ---
+    // Google Apps Script returns 302 redirect; fetch converts POST→GET on redirect,
+    // dropping the body. We must disable auto-redirect and re-POST to the Location URL.
     const GSHEET_WEBHOOK = process.env.GSHEET_WEBHOOK_URL || "";
     if (GSHEET_WEBHOOK) {
       try {
+        const sheetPayload = JSON.stringify({
+          timestamp: timestamp || new Date().toISOString(),
+          role: clean(role),
+          sector: clean(sector),
+          motivation: clean(motivation),
+          referral: clean(referral),
+          freeText: clean(freeText) || "",
+          city: geo.city,
+          region: geo.region,
+          country: geo.country,
+          countryCode: geo.countryCode,
+          lat: geo.lat,
+          lon: geo.lon,
+          org: geo.org,
+          isp: geo.isp,
+          slidesViewed: visitCount || "",
+          slidePattern: Array.isArray(visitPattern) ? visitPattern.map(s => s + 1).join(", ") : "",
+          userAgent: clean(userAgent),
+          referrer: clean(referrer) || "Direct",
+          ip: clientIp,
+        });
+        // Use text/plain so Google Apps Script reliably receives e.postData.contents
         await fetch(GSHEET_WEBHOOK, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            timestamp: timestamp || new Date().toISOString(),
-            role: clean(role),
-            sector: clean(sector),
-            motivation: clean(motivation),
-            referral: clean(referral),
-            freeText: clean(freeText) || "",
-            city: geo.city,
-            region: geo.region,
-            country: geo.country,
-            countryCode: geo.countryCode,
-            lat: geo.lat,
-            lon: geo.lon,
-            org: geo.org,
-            isp: geo.isp,
-            slidesViewed: visitCount || "",
-            slidePattern: Array.isArray(visitPattern) ? visitPattern.map(s => s + 1).join(", ") : "",
-            userAgent: clean(userAgent),
-            referrer: clean(referrer) || "Direct",
-            ip: clientIp,
-          }),
+          headers: { "Content-Type": "text/plain" },
+          body: sheetPayload,
         });
       } catch (e) { console.error("GSheet error:", e); } // non-blocking
     }
