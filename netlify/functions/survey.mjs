@@ -41,13 +41,31 @@ export default async (req) => {
     // Sanitize inputs (strip HTML tags)
     const clean = (s) => (s || "").replace(/<[^>]*>/g, "").slice(0, 500);
 
+    // --- Geolocation from IP (server-side, invisible to user) ---
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+                  || req.headers.get("x-nf-client-connection-ip")
+                  || req.headers.get("client-ip")
+                  || "unknown";
+
+    let geo = { city: "Unknown", region: "Unknown", country: "Unknown", countryCode: "", lat: null, lon: null, isp: "", org: "" };
+    try {
+      const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,city,regionName,country,countryCode,lat,lon,isp,org`);
+      const geoData = await geoRes.json();
+      if (geoData.status === "success") {
+        geo = { city: geoData.city, region: geoData.regionName, country: geoData.country, countryCode: geoData.countryCode, lat: geoData.lat, lon: geoData.lon, isp: geoData.isp || "", org: geoData.org || "" };
+      }
+    } catch {} // geolocation is best-effort, don't fail the survey
+
+    const locationStr = geo.city !== "Unknown" ? `${geo.city}, ${geo.region}, ${geo.country}` : clientIp;
+    const mapUrl = geo.lat != null ? `https://www.google.com/maps?q=${geo.lat},${geo.lon}` : null;
+
     const dateStr = new Date(timestamp || Date.now()).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
 
     const emailHtml = `
       <div style="font-family:'Segoe UI',sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#1e3a8a,#7c3aed);padding:20px;border-radius:12px 12px 0 0;">
           <h2 style="color:white;margin:0;font-size:18px;">AI Ethics Masterclass &mdash; Survey Response</h2>
-          <p style="color:#c4b5fd;margin:4px 0 0;font-size:13px;">${dateStr}</p>
+          <p style="color:#c4b5fd;margin:4px 0 0;font-size:13px;">${dateStr} &middot; ${clean(locationStr)}</p>
         </div>
         <div style="background:#0f172a;padding:20px;color:#e2e8f0;border-radius:0 0 12px 12px;">
           <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -72,9 +90,21 @@ export default async (req) => {
               <td style="padding:10px 0;color:#f1f5f9;">${clean(freeText)}</td>
             </tr>` : ""}
           </table>
-          <div style="margin-top:16px;padding-top:12px;border-top:1px solid #1e293b;font-size:11px;color:#64748b;">
+          <div style="margin-top:16px;padding-top:12px;border-top:1px solid #1e293b;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#818cf8;">📍 Location</p>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <tr><td style="padding:3px 0;color:#94a3b8;width:90px;">City</td><td style="color:#e2e8f0;">${clean(geo.city)}</td></tr>
+              <tr><td style="padding:3px 0;color:#94a3b8;">Region</td><td style="color:#e2e8f0;">${clean(geo.region)}</td></tr>
+              <tr><td style="padding:3px 0;color:#94a3b8;">Country</td><td style="color:#e2e8f0;">${clean(geo.country)} ${geo.countryCode ? `(${clean(geo.countryCode)})` : ""}</td></tr>
+              <tr><td style="padding:3px 0;color:#94a3b8;">Coordinates</td><td style="color:#e2e8f0;">${geo.lat != null ? `${geo.lat}, ${geo.lon}` : "N/A"}${mapUrl ? ` &mdash; <a href="${mapUrl}" style="color:#60a5fa;">View on Map</a>` : ""}</td></tr>
+              ${geo.org ? `<tr><td style="padding:3px 0;color:#94a3b8;">Organisation</td><td style="color:#e2e8f0;">${clean(geo.org)}</td></tr>` : ""}
+              ${geo.isp ? `<tr><td style="padding:3px 0;color:#94a3b8;">ISP</td><td style="color:#e2e8f0;">${clean(geo.isp)}</td></tr>` : ""}
+            </table>
+          </div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #1e293b;font-size:11px;color:#64748b;">
             <p style="margin:2px 0;"><strong>User Agent:</strong> ${clean(userAgent)}</p>
             <p style="margin:2px 0;"><strong>Referrer:</strong> ${clean(referrer) || "Direct"}</p>
+            <p style="margin:2px 0;"><strong>IP:</strong> ${clean(clientIp)}</p>
           </div>
         </div>
       </div>
@@ -89,7 +119,7 @@ export default async (req) => {
       body: JSON.stringify({
         from: "AI Ethics Survey <onboarding@resend.dev>",
         to: [RECIPIENT_EMAIL],
-        subject: `Survey: ${clean(role)} | ${clean(sector)} | ${new Date(timestamp || Date.now()).toLocaleDateString()}`,
+        subject: `Survey: ${clean(role)} | ${clean(sector)} | ${locationStr} | ${new Date(timestamp || Date.now()).toLocaleDateString()}`,
         html: emailHtml,
       }),
     });
