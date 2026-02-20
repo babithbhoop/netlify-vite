@@ -11,6 +11,12 @@
   to = "/.netlify/functions/news"
   status = 200
 
+# Proxy the survey function
+[[redirects]]
+  from = "/api/survey"
+  to = "/.netlify/functions/survey"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

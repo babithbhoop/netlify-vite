@@ -1489,6 +1489,125 @@ const slides = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SURVEY MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+const SURVEY_COOLDOWN_KEY = "survey_completed";
+const SURVEY_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+const SURVEY_QUESTIONS = [
+  {
+    key: "role",
+    label: "What best describes your role?",
+    options: ["Student (UG)", "Student (Grad/PhD)", "Faculty / Researcher", "Industry IC", "Manager / Director", "Executive / C-Suite", "Policy / Legal", "Other"],
+  },
+  {
+    key: "sector",
+    label: "Which sector are you in?",
+    options: ["Technology", "Finance / Banking", "Healthcare", "Government / Public Sector", "Education / Academia", "Consulting", "Media / Journalism", "Other"],
+  },
+  {
+    key: "motivation",
+    label: "Why does AI ethics matter to you right now?",
+    options: ["Building AI that needs governance", "Researching safety / alignment", "Regulatory compliance pressure", "Career in AI governance", "Part of my curriculum", "General curiosity"],
+  },
+  {
+    key: "referral",
+    label: "How did you find this masterclass?",
+    options: ["Professor / Faculty", "Colleague / Friend", "Social media", "Search engine", "Conference / Event", "Direct link from presenter", "Other"],
+  },
+];
+
+function SurveyModal({ onClose, onSubmit }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [freeText, setFreeText] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const totalSteps = SURVEY_QUESTIONS.length + 1; // +1 for free text
+
+  const handleSelect = (key, value) => {
+    const next = { ...answers, [key]: value };
+    setAnswers(next);
+    // auto-advance after short delay
+    setTimeout(() => setStep(s => s + 1), 250);
+  };
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    onSubmit({ ...answers, freeText: freeText.trim() || null });
+    setTimeout(() => onClose(), 2500);
+  };
+
+  if (submitted) {
+    return (
+      <div style={{ position: "absolute", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", borderRadius: 14 }}>
+        <div style={{ textAlign: "center", animation: "fadeIn 0.4s ease" }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>✓</div>
+          <h3 style={{ color: "#a5b4fc", margin: "0 0 6px 0", fontSize: 18, fontWeight: 800 }}>Thank you!</h3>
+          <p style={{ color: "#64748b", fontSize: 12, margin: 0 }}>Your feedback helps improve this programme.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const q = SURVEY_QUESTIONS[step];
+  const isFreeText = step === SURVEY_QUESTIONS.length;
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", borderRadius: 14 }}>
+      <div style={{ width: "85%", maxWidth: 420, position: "relative" }}>
+        {/* Close button */}
+        <button onClick={onClose} style={{ position: "absolute", top: -8, right: -8, width: 28, height: 28, borderRadius: "50%", border: "1px solid #334155", background: "#1e293b", color: "#94a3b8", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2 }} title="Skip survey">✕</button>
+
+        {/* Progress dots */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 14 }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: i < step ? "#818cf8" : i === step ? "#a5b4fc" : "#1e293b", border: i === step ? "2px solid #6366f1" : "2px solid transparent", transition: "all 0.3s" }} />
+          ))}
+        </div>
+
+        {/* Header */}
+        <div style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderRadius: "12px 12px 0 0", padding: "14px 18px" }}>
+          <p style={{ margin: 0, fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#818cf8" }}>Quick Anonymous Survey</p>
+          <h3 style={{ margin: "6px 0 0 0", fontSize: 15, fontWeight: 800, color: "#e0e7ff", lineHeight: 1.3 }}>
+            {isFreeText ? "Anything else you'd like us to know?" : q.label}
+          </h3>
+        </div>
+
+        {/* Body */}
+        <div style={{ background: "#0f172a", borderRadius: "0 0 12px 12px", padding: "12px 18px 16px" }}>
+          {isFreeText ? (
+            <div>
+              <textarea
+                value={freeText}
+                onChange={e => setFreeText(e.target.value.slice(0, 280))}
+                placeholder="Optional — 280 characters max"
+                style={{ width: "100%", minHeight: 70, padding: 10, borderRadius: 8, border: "1px solid #334155", background: "#1e293b", color: "#e2e8f0", fontSize: 13, fontFamily: "inherit", resize: "none", boxSizing: "border-box", outline: "none" }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <span style={{ fontSize: 10, color: "#475569" }}>{freeText.length}/280</span>
+                <button onClick={handleSubmit} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #4f46e5, #7c3aed)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  Submit
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {q.options.map(opt => (
+                <button key={opt} onClick={() => handleSelect(q.key, opt)}
+                  style={{ textAlign: "left", padding: "9px 14px", borderRadius: 8, border: answers[q.key] === opt ? "1.5px solid #6366f1" : "1px solid #1e293b", background: answers[q.key] === opt ? "#1e1b4b" : "#0f172a", color: answers[q.key] === opt ? "#a5b4fc" : "#cbd5e1", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+          <p style={{ margin: "10px 0 0", fontSize: 9, color: "#475569", textAlign: "center" }}>No personal data collected · 100% anonymous</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // VISUAL ROUTER
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideVisual({ type }) {
@@ -1524,6 +1643,53 @@ const phaseColors = { 1: "#2563EB", 2: "#7c3aed", 3: "#059669" };
 // ─────────────────────────────────────────────────────────────────────────────
 export default function PresentationViewer() {
   const [current, setCurrent] = useState(0);
+  const [visitedSlides, setVisitedSlides] = useState(() => new Set([0]));
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyDismissed, setSurveyDismissed] = useState(false);
+
+  const SURVEY_THRESHOLD = 6; // 30% of 20 slides
+
+  const goToSlide = (idx) => {
+    setCurrent(idx);
+    setVisitedSlides(prev => {
+      const next = new Set(prev);
+      next.add(idx);
+      return next;
+    });
+  };
+
+  // Check if survey should be shown when visitedSlides grows
+  useEffect(() => {
+    if (surveyDismissed || showSurvey) return;
+    if (visitedSlides.size < SURVEY_THRESHOLD) return;
+    // Check 30-day cooldown
+    try {
+      const ts = parseInt(localStorage.getItem(SURVEY_COOLDOWN_KEY), 10);
+      if (ts && Date.now() - ts < SURVEY_COOLDOWN_MS) return;
+    } catch {}
+    setShowSurvey(true);
+  }, [visitedSlides.size, surveyDismissed, showSurvey]);
+
+  const handleSurveySubmit = (data) => {
+    localStorage.setItem(SURVEY_COOLDOWN_KEY, String(Date.now()));
+    // Fire and forget — user never sees the result
+    fetch("/api/survey", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        userAgent: navigator.userAgent,
+        referrer: document.referrer || null,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {}); // silent fail
+  };
+
+  const handleSurveyClose = () => {
+    setShowSurvey(false);
+    setSurveyDismissed(true); // session-only dismiss
+  };
+
   const slide = slides[current];
   const isActivity = !!slide.activity;
   const borderColor = isActivity ? "#EA580C" : slide.accent;
@@ -1537,7 +1703,7 @@ export default function PresentationViewer() {
         <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#374151" }}>IIT Patna · AI Ethics Masterclass · 2026</span>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           {slides.map((sl, i) => (
-            <button key={i} onClick={() => setCurrent(i)}
+            <button key={i} onClick={() => goToSlide(i)}
               style={{ width: 9, height: 9, borderRadius: "50%", border: "none", cursor: "pointer", background: i === current ? borderColor : sl.activity ? "#92400e" : "#1f2937", transform: i === current ? "scale(1.5)" : "scale(1)", transition: "all 0.2s" }} />
           ))}
         </div>
@@ -1546,6 +1712,7 @@ export default function PresentationViewer() {
 
       {/* Slide — 16:9 */}
       <div style={{ width: "100%", maxWidth: 920, borderRadius: 16, overflow: "hidden", border: `2px solid ${borderColor}`, boxShadow: `0 0 50px ${borderColor}25`, aspectRatio: "16/9", position: "relative", background: "#080810" }}>
+        {showSurvey && <SurveyModal onClose={handleSurveyClose} onSubmit={handleSurveySubmit} />}
         {isActivity && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#EA580C,#f97316,#EA580C)" }} />}
         <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "18px 22px", boxSizing: "border-box", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, flexShrink: 0 }}>
@@ -1584,12 +1751,12 @@ export default function PresentationViewer() {
 
       {/* Navigation */}
       <div style={{ width: "100%", maxWidth: 920, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-        <button onClick={() => setCurrent(p => Math.max(0, p - 1))} disabled={current === 0}
+        <button onClick={() => goToSlide(Math.max(0, current - 1))} disabled={current === 0}
           style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 18px", borderRadius: 9, border: `1px solid ${current === 0 ? "#1f2937" : "#2563EB"}`, background: current === 0 ? "#111" : "#1e3a8a", color: current === 0 ? "#374151" : "#93c5fd", fontWeight: 700, fontSize: 12, cursor: current === 0 ? "not-allowed" : "pointer" }}>
           <Icons.ChevronLeft s={15} c={current === 0 ? "#374151" : "#93c5fd"} /> Previous
         </button>
         <span style={{ fontSize: 10, color: "#374151" }}>~{5 + (current % 2)} min</span>
-        <button onClick={() => setCurrent(p => Math.min(slides.length - 1, p + 1))} disabled={current === slides.length - 1}
+        <button onClick={() => goToSlide(Math.min(slides.length - 1, current + 1))} disabled={current === slides.length - 1}
           style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 18px", borderRadius: 9, border: `1px solid ${current === slides.length - 1 ? "#1f2937" : "#2563EB"}`, background: current === slides.length - 1 ? "#111" : "#1e3a8a", color: current === slides.length - 1 ? "#374151" : "#93c5fd", fontWeight: 700, fontSize: 12, cursor: current === slides.length - 1 ? "not-allowed" : "pointer" }}>
           Next <Icons.ChevronRight s={15} c={current === slides.length - 1 ? "#374151" : "#93c5fd"} />
         </button>
