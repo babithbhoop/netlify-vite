@@ -29,7 +29,7 @@ export default async (req) => {
 
   try {
     const body = await req.json();
-    const { role, sector, motivation, referral, freeText, userAgent, referrer, timestamp } = body;
+    const { role, sector, motivation, referral, freeText, visitPattern, visitCount, userAgent, referrer, timestamp } = body;
 
     if (!role || !sector || !motivation || !referral) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -101,6 +101,11 @@ export default async (req) => {
               ${geo.isp ? `<tr><td style="padding:3px 0;color:#94a3b8;">ISP</td><td style="color:#e2e8f0;">${clean(geo.isp)}</td></tr>` : ""}
             </table>
           </div>
+          ${visitPattern ? `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #1e293b;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#818cf8;">🗺️ Browsing Pattern</p>
+            <p style="margin:2px 0;font-size:12px;color:#94a3b8;"><strong>Slides viewed:</strong> <span style="color:#e2e8f0;">${visitCount || "?"} of 20</span></p>
+            <p style="margin:2px 0;font-size:12px;color:#94a3b8;"><strong>Slide sequence:</strong> <span style="color:#e2e8f0;">${Array.isArray(visitPattern) ? visitPattern.map(s => s + 1).join(", ") : "N/A"}</span></p>
+          </div>` : ""}
           <div style="margin-top:12px;padding-top:10px;border-top:1px solid #1e293b;font-size:11px;color:#64748b;">
             <p style="margin:2px 0;"><strong>User Agent:</strong> ${clean(userAgent)}</p>
             <p style="margin:2px 0;"><strong>Referrer:</strong> ${clean(referrer) || "Direct"}</p>

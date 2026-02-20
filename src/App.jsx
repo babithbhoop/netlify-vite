@@ -1491,8 +1491,9 @@ const slides = [
 // ─────────────────────────────────────────────────────────────────────────────
 // SURVEY MODAL
 // ─────────────────────────────────────────────────────────────────────────────
-const SURVEY_COOLDOWN_KEY = "survey_completed";
-const SURVEY_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SURVEY_STORAGE_KEY = "survey_state"; // { ts, pattern: [sorted slide indices] }
+const SURVEY_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7-day periodic cooldown
+const SURVEY_PATTERN_DIFF_THRESHOLD = 3; // trigger if 3+ slides differ from last session
 
 const SURVEY_QUESTIONS = [
   {
@@ -1658,26 +1659,39 @@ export default function PresentationViewer() {
     });
   };
 
-  // Check if survey should be shown when visitedSlides grows
+  // Smart survey trigger: first visit, new pattern, or periodic re-survey
   useEffect(() => {
     if (surveyDismissed || showSurvey) return;
     if (visitedSlides.size < SURVEY_THRESHOLD) return;
-    // Check 30-day cooldown
-    try {
-      const ts = parseInt(localStorage.getItem(SURVEY_COOLDOWN_KEY), 10);
-      if (ts && Date.now() - ts < SURVEY_COOLDOWN_MS) return;
-    } catch {}
-    setShowSurvey(true);
+
+    let prev = null;
+    try { prev = JSON.parse(localStorage.getItem(SURVEY_STORAGE_KEY)); } catch {}
+
+    // First-time visitor — never submitted before
+    if (!prev) { setShowSurvey(true); return; }
+
+    // Periodic re-survey: cooldown expired (7 days)
+    if (Date.now() - (prev.ts || 0) > SURVEY_COOLDOWN_MS) { setShowSurvey(true); return; }
+
+    // Different browsing pattern: compare current visited set vs. last recorded pattern
+    const currentPattern = [...visitedSlides].sort((a, b) => a - b);
+    const lastPattern = prev.pattern || [];
+    const newSlides = currentPattern.filter(s => !lastPattern.includes(s));
+    if (newSlides.length >= SURVEY_PATTERN_DIFF_THRESHOLD) { setShowSurvey(true); return; }
   }, [visitedSlides.size, surveyDismissed, showSurvey]);
 
   const handleSurveySubmit = (data) => {
-    localStorage.setItem(SURVEY_COOLDOWN_KEY, String(Date.now()));
+    // Save submission time + current browsing pattern
+    const currentPattern = [...visitedSlides].sort((a, b) => a - b);
+    localStorage.setItem(SURVEY_STORAGE_KEY, JSON.stringify({ ts: Date.now(), pattern: currentPattern }));
     // Fire and forget — user never sees the result
     fetch("/api/survey", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...data,
+        visitPattern: currentPattern,
+        visitCount: currentPattern.length,
         userAgent: navigator.userAgent,
         referrer: document.referrer || null,
         timestamp: new Date().toISOString(),
@@ -1687,7 +1701,7 @@ export default function PresentationViewer() {
 
   const handleSurveyClose = () => {
     setShowSurvey(false);
-    setSurveyDismissed(true); // session-only dismiss
+    setSurveyDismissed(true); // session-only dismiss — next visit will re-evaluate
   };
 
   const slide = slides[current];
