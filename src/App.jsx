@@ -59,7 +59,7 @@ const FALLBACK_NEWS = [
   { tag: "GLOBAL · 2025", tagColor: "#10b981", headline: "AI Incidents Up 56.4% in One Year", body: "Stanford HAI 2025: AI-related security and privacy incidents rose 56.4% from 2023 to 2024. Facial recognition wrongful arrests continue.", url: "https://purplesec.us/learn/ai-security-risks/", source: "PurpleSec", isIndia: false },
 ];
 
-const NEWS_CACHE_KEY = "ai_ethics_news_cache";
+const NEWS_CACHE_KEY = "ai_ethics_news_v2";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const NEWS_TAG_COLORS = ["#ef4444", "#f97316", "#eab308", "#a855f7", "#06b6d4", "#10b981"];
 const NEWS_ICONS = [Icons.AlertTriangle, Icons.Zap, Icons.Users, Icons.BarChart2, Icons.Shield, Icons.Activity];

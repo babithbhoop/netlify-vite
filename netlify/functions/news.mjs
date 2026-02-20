@@ -94,7 +94,7 @@ export default async (req) => {
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=86400", // CDN caches for 1 day
+        "Cache-Control": "public, max-age=3600", // CDN caches for 1 hour
       },
     });
   } catch (err) {
