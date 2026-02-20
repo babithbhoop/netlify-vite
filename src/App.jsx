@@ -134,47 +134,72 @@ function Slide1Visual() {
 // SLIDE 2: WORLD MAP LEGAL LANDSCAPE
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide2Visual() {
+  // Pin coordinates in the SVG viewBox space (30.767 241.591 784.077 458.627)
   const laws = [
-    { region: "India", flag: "🇮🇳", name: "DPDP Act", year: "2023/25", fine: "₹250 Cr", status: "Enforcing", color: "#f97316", x: "72%", y: "50%", desc: "Digital Personal Data Protection Act. 7 Governance Sutras. New AI Safety Institute announced Feb 2026." },
-    { region: "EU", flag: "🇪🇺", name: "EU AI Act", year: "2024", fine: "€35M/7%", status: "Live Aug 2025", color: "#2563EB", x: "50%", y: "33%", desc: "World's first comprehensive AI law. Risk tiers: Unacceptable, High, Limited, Minimal. Annex IV documentation mandatory." },
-    { region: "USA", flag: "🇺🇸", name: "EO 14110 + NIST RMF", year: "2023", fine: "Sector-based", status: "Active", color: "#10b981", x: "16%", y: "37%", desc: "Executive Order on Safe AI. NIST AI Risk Management Framework 1.0. State-level laws in CA, TX, NY." },
-    { region: "UK", flag: "🇬🇧", name: "AI Safety Institute", year: "2023", fine: "Context-based", status: "Operational", color: "#8b5cf6", x: "47%", y: "29%", desc: "Bletchley Declaration signed by 28 nations. World's first AI Safety Institute. Frontier AI safety evaluations." },
-    { region: "China", flag: "🇨🇳", name: "Generative AI Regs", year: "2023", fine: "State authority", status: "Enforcing", color: "#ef4444", x: "80%", y: "39%", desc: "Mandatory safety assessments for GenAI services. Government approval before public launch. Algorithmic recommendation rules." },
-    { region: "Brazil", flag: "🇧🇷", name: "AI Bill (PL 2338)", year: "2025", fine: "R$50M", status: "Enacted", color: "#06b6d4", x: "31%", y: "72%", desc: "Comprehensive AI regulation modeled after EU AI Act. Human oversight mandatory for high-risk systems. Data rights for AI training." },
-    { region: "Canada", flag: "🇨🇦", name: "AIDA (Bill C-27)", year: "2024", fine: "CAD$25M", status: "Advancing", color: "#eab308", x: "18%", y: "19%", desc: "Artificial Intelligence and Data Act. High-impact AI system registration. International Data Transfer controls." },
-    { region: "Japan", flag: "🇯🇵", name: "AI Guidelines", year: "2024", fine: "Voluntary+", status: "Adopted", color: "#f472b6", x: "88%", y: "37%", desc: "Hiroshima AI Process guiding principles. Voluntary code of conduct for advanced AI. G7 framework alignment." },
+    { region: "India", flag: "🇮🇳", name: "DPDP Act", year: "2023/25", fine: "₹250 Cr", status: "Enforcing", color: "#f97316", sx: 595, sy: 470, desc: "Digital Personal Data Protection Act. 7 Governance Sutras. New AI Safety Institute announced Feb 2026." },
+    { region: "EU", flag: "🇪🇺", name: "EU AI Act", year: "2024", fine: "€35M/7%", status: "Live Aug 2025", color: "#2563EB", sx: 430, sy: 395, desc: "World's first comprehensive AI law. Risk tiers: Unacceptable, High, Limited, Minimal. Annex IV documentation mandatory." },
+    { region: "USA", flag: "🇺🇸", name: "EO 14110 + NIST RMF", year: "2023", fine: "Sector-based", status: "Active", color: "#10b981", sx: 165, sy: 405, desc: "Executive Order on Safe AI. NIST AI Risk Management Framework 1.0. State-level laws in CA, TX, NY." },
+    { region: "UK", flag: "🇬🇧", name: "AI Safety Institute", year: "2023", fine: "Context-based", status: "Operational", color: "#8b5cf6", sx: 400, sy: 375, desc: "Bletchley Declaration signed by 28 nations. World's first AI Safety Institute. Frontier AI safety evaluations." },
+    { region: "China", flag: "🇨🇳", name: "Generative AI Regs", year: "2023", fine: "State authority", status: "Enforcing", color: "#ef4444", sx: 660, sy: 420, desc: "Mandatory safety assessments for GenAI services. Government approval before public launch. Algorithmic recommendation rules." },
+    { region: "Brazil", flag: "🇧🇷", name: "AI Bill (PL 2338)", year: "2025", fine: "R$50M", status: "Enacted", color: "#06b6d4", sx: 270, sy: 570, desc: "Comprehensive AI regulation modeled after EU AI Act. Human oversight mandatory for high-risk systems. Data rights for AI training." },
+    { region: "Canada", flag: "🇨🇦", name: "AIDA (Bill C-27)", year: "2024", fine: "CAD$25M", status: "Advancing", color: "#eab308", sx: 180, sy: 340, desc: "Artificial Intelligence and Data Act. High-impact AI system registration. International Data Transfer controls." },
+    { region: "Japan", flag: "🇯🇵", name: "AI Guidelines", year: "2024", fine: "Voluntary+", status: "Adopted", color: "#f472b6", sx: 718, sy: 415, desc: "Hiroshima AI Process guiding principles. Voluntary code of conduct for advanced AI. G7 framework alignment." },
   ];
 
   const [active, setActive] = useState(null);
+  const mapRef = useRef(null);
+  const [mapSize, setMapSize] = useState({ w: 1, h: 1, left: 0, top: 0 });
+
+  useEffect(() => {
+    const update = () => {
+      if (mapRef.current) {
+        const r = mapRef.current.getBoundingClientRect();
+        setMapSize({ w: r.width, h: r.height, left: 0, top: 0 });
+      }
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // Convert SVG coordinates to pixel position within the container
+  const VB = { x: 30.767, y: 241.591, w: 784.077, h: 458.627 };
+  const toPos = (sx, sy) => ({
+    left: ((sx - VB.x) / VB.w) * mapSize.w,
+    top: ((sy - VB.y) / VB.h) * mapSize.h,
+  });
 
   return (
     <div style={{ width: "100%", marginTop: 6, position: "relative" }}>
-      {/* World map background (SVG continents, simplified) */}
-      <div style={{ position: "relative", width: "100%", height: 195, background: "linear-gradient(135deg,#0a1628 0%,#0d1f3c 100%)", borderRadius: 12, border: "1px solid #1e3a5f", overflow: "hidden" }}>
+      {/* World map background */}
+      <div ref={mapRef} style={{ position: "relative", width: "100%", height: 195, background: "linear-gradient(135deg,#0a1628 0%,#0d1f3c 100%)", borderRadius: 12, border: "1px solid #1e3a5f", overflow: "hidden" }}>
         {/* Ocean grid lines */}
-        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.2 }} viewBox="0 0 900 195" preserveAspectRatio="none">
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.15 }} viewBox="0 0 900 195" preserveAspectRatio="none">
           {[25, 50, 75, 100, 125, 150, 175].map(y => <line key={y} x1="0" y1={y} x2="900" y2={y} stroke="#2563EB" strokeWidth="0.5"/>)}
           {[100,200,300,400,500,600,700,800].map(x => <line key={x} x1={x} y1="0" x2={x} y2="195" stroke="#2563EB" strokeWidth="0.5"/>)}
         </svg>
 
-        {/* World map background */}
+        {/* World map SVG stretched to fill container */}
         <img src={worldMapUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "fill", opacity: 0.45, pointerEvents: "none" }} />
 
-        {/* Pins */}
-        {laws.map((l, i) => (
-          <div key={i}
-            onClick={() => setActive(active === i ? null : i)}
-            style={{ position: "absolute", left: l.x, top: l.y, transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${l.color}22`, border: `2px solid ${l.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, transition: "transform 0.15s", transform: active === i ? "scale(1.3)" : "scale(1)" }}>
-              {l.flag}
-            </div>
-            {active !== i && (
-              <div style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 9, fontWeight: 800, color: l.color, background: "#0a1628dd", padding: "1px 4px", borderRadius: 3 }}>
-                {l.name}
+        {/* Pins — positioned using the same SVG coordinate system as the map */}
+        {laws.map((l, i) => {
+          const pos = toPos(l.sx, l.sy);
+          return (
+            <div key={i}
+              onClick={() => setActive(active === i ? null : i)}
+              style={{ position: "absolute", left: pos.left, top: pos.top, transform: "translate(-50%,-50%)", cursor: "pointer", zIndex: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: `${l.color}22`, border: `2px solid ${l.color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, transition: "transform 0.15s", transform: active === i ? "scale(1.3)" : "scale(1)" }}>
+                {l.flag}
               </div>
-            )}
-          </div>
-        ))}
+              {active !== i && (
+                <div style={{ position: "absolute", top: -16, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontSize: 8, fontWeight: 800, color: l.color, background: "#0a1628dd", padding: "1px 4px", borderRadius: 3 }}>
+                  {l.name}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* Tooltip */}
         {active !== null && (
