@@ -48,84 +48,97 @@ function Link({ href, children, style = {} }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SLIDE 1: BREAKING NEWS INFOGRAPHIC
+// SLIDE 1: LIVE AI SAFETY NEWS (auto-refreshes weekly)
 // ─────────────────────────────────────────────────────────────────────────────
+const FALLBACK_NEWS = [
+  { tag: "BREAKING · FEB 9, 2026", tagColor: "#ef4444", headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"", body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\" and AI-enabled bioweapon risk.", url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/", source: "eWeek", isIndia: false },
+  { tag: "INDIA · FEB 19, 2026", tagColor: "#f97316", headline: "India AI Impact Summit 2026: Modi Calls for \"Glass Box, Not Black Box\" AI", body: "PM Modi opens global summit in New Delhi with 110+ nations. Declares deepfakes \"destabilise open society\" and calls for global trusted data framework.", url: "https://organiser.org/2026/02/19/340845/bharat/ai-impact-summit-glass-box-not-black-box-pm-modi-proposes-3-point-global-framework-for-ethical-ai-ecosystem/", source: "Organiser", isIndia: true },
+  { tag: "2025 DATA", tagColor: "#eab308", headline: "487 Deepfake Attacks in Q2 2025 Alone. $347M Lost in 90 Days.", body: "Resemble.ai documents 487 deepfake attacks in Q2 2025, up 41% from prior quarter. Deepfake finance fraud cost $347M in a single quarter.", url: "https://www.scientificamerican.com/article/we-need-laws-to-stop-ai-generated-deepfakes/", source: "Scientific American", isIndia: false },
+  { tag: "EXODUS", tagColor: "#a855f7", headline: "AI Safety Researchers Are Running for the Door", body: "OpenAI researcher Zoe Hitzig quits in NYT essay. OpenAI disbands Mission Alignment team. 6 senior AI safety exits in 14 days.", url: "https://edition.cnn.com/2026/02/11/business/openai-anthropic-departures-nightcap", source: "CNN", isIndia: false },
+  { tag: "INDIA · 2025", tagColor: "#06b6d4", headline: "Deepfake of Finance Minister Scams Hyderabad Doctor of Rs 20 Lakh", body: "A 71-year-old retired doctor was shown AI-generated video of the Finance Minister endorsing investment platforms. Lost Rs 20 lakh.", url: "https://www.crescendo.ai/blog/ai-controversies", source: "Crescendo AI", isIndia: true },
+  { tag: "GLOBAL · 2025", tagColor: "#10b981", headline: "AI Incidents Up 56.4% in One Year", body: "Stanford HAI 2025: AI-related security and privacy incidents rose 56.4% from 2023 to 2024. Facial recognition wrongful arrests continue.", url: "https://purplesec.us/learn/ai-security-risks/", source: "PurpleSec", isIndia: false },
+];
+
+const NEWS_CACHE_KEY = "ai_ethics_news_cache";
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const NEWS_TAG_COLORS = ["#ef4444", "#f97316", "#eab308", "#a855f7", "#06b6d4", "#10b981"];
+const NEWS_ICONS = [Icons.AlertTriangle, Icons.Zap, Icons.Users, Icons.BarChart2, Icons.Shield, Icons.Activity];
+
+function useWeeklyNews() {
+  const [news, setNews] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
+      if (cached && Date.now() - cached.ts < WEEK_MS) return { articles: cached.articles, live: true, fetchedAt: cached.fetchedAt };
+    } catch {}
+    return { articles: FALLBACK_NEWS, live: false, fetchedAt: null };
+  });
+
+  useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
+      if (cached && Date.now() - cached.ts < WEEK_MS) return;
+    } catch {}
+
+    fetch("/api/news")
+      .then(r => r.json())
+      .then(data => {
+        if (data.articles && data.articles.length > 0) {
+          const cacheObj = { articles: data.articles, ts: Date.now(), fetchedAt: data.fetchedAt };
+          localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(cacheObj));
+          setNews({ articles: data.articles, live: true, fetchedAt: data.fetchedAt });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  return news;
+}
+
 function Slide1Visual() {
-  const news = [
-    {
-      tag: "BREAKING · FEB 9, 2026",
-      tagColor: "#ef4444",
-      headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"",
-      body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\" and AI-enabled bioweapon risk. He found AI models knew when they were being tested and faked compliance.",
-      url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/",
-      icon: Icons.AlertTriangle,
-      iconColor: "#ef4444",
-    },
-    {
-      tag: "BREAKING · FEB 19, 2026",
-      tagColor: "#f97316",
-      headline: "India AI Impact Summit 2026: Modi Calls for \"Glass Box, Not Black Box\" AI",
-      body: "PM Modi opens global summit in New Delhi with 110+ nations. Declares deepfakes \"destabilise open society\" and calls for global trusted data framework. India's new AI Governance Guidelines now mandate Safety Institutes.",
-      url: "https://organiser.org/2026/02/19/340845/bharat/ai-impact-summit-glass-box-not-black-box-pm-modi-proposes-3-point-global-framework-for-ethical-ai-ecosystem/",
-      icon: Icons.Globe,
-      iconColor: "#f97316",
-    },
-    {
-      tag: "2025 DATA",
-      tagColor: "#eab308",
-      headline: "487 Deepfake Attacks in Q2 2025 Alone. $347M Lost in 90 Days.",
-      body: "Resemble.ai documents 487 deepfake attacks in Q2 2025, up 41% from prior quarter. Deepfake finance fraud cost $347M in a single quarter. Deepfake CSAM rose 400% vs 2024. AI incidents in AIAAIC database: 1,359 and climbing.",
-      url: "https://www.scientificamerican.com/article/we-need-laws-to-stop-ai-generated-deepfakes/",
-      icon: Icons.Zap,
-      iconColor: "#eab308",
-    },
-    {
-      tag: "EXODUS",
-      tagColor: "#a855f7",
-      headline: "AI Safety Researchers Are Running for the Door",
-      body: "OpenAI researcher Zoe Hitzig quits in NYT essay. OpenAI disbands Mission Alignment team. xAI co-founders Jimmy Ba and Tony Wu resign. Jimmy Ba: \"2026 is the most consequential year for our species.\" 6 senior AI safety exits in 14 days.",
-      url: "https://edition.cnn.com/2026/02/11/business/openai-anthropic-departures-nightcap",
-      icon: Icons.Users,
-      iconColor: "#a855f7",
-    },
-    {
-      tag: "INDIA SPECIFIC · 2025",
-      tagColor: "#06b6d4",
-      headline: "Deepfake of Finance Minister Nirmala Sitharaman Scams Hyderabad Doctor of Rs 20 Lakh",
-      body: "A 71-year-old retired doctor was shown AI-generated video of the Finance Minister endorsing investment platforms. Lost Rs 20 lakh before realising it was fabricated. Case under investigation.",
-      url: "https://www.crescendo.ai/blog/ai-controversies",
-      icon: Icons.AlertTriangle,
-      iconColor: "#06b6d4",
-    },
-    {
-      tag: "GLOBAL · 2025",
-      tagColor: "#10b981",
-      headline: "AI Incidents Up 56.4% in One Year. 95% of Businesses Admit They Don't Know the Point.",
-      body: "Stanford HAI 2025: AI-related security and privacy incidents rose 56.4% from 2023 to 2024. Facial recognition wrongful arrests continue. AI chatbot wrongly guided 900K+ Canadians on tax filings.",
-      url: "https://purplesec.us/learn/ai-security-risks/",
-      icon: Icons.BarChart2,
-      iconColor: "#10b981",
-    },
-  ];
+  const { articles, live, fetchedAt } = useWeeklyNews();
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%", marginTop: 6 }}>
-      {news.map((n, i) => (
-        <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
-          style={{ textDecoration: "none", borderRadius: 10, padding: "10px 12px", border: `1px solid ${n.tagColor}40`, background: `${n.tagColor}0d`, display: "flex", gap: 10, cursor: "pointer", transition: "background 0.2s" }}
-          onMouseEnter={e => e.currentTarget.style.background = `${n.tagColor}1a`}
-          onMouseLeave={e => e.currentTarget.style.background = `${n.tagColor}0d`}>
-          <div style={{ flexShrink: 0, marginTop: 2 }}><n.icon s={18} c={n.iconColor} /></div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, color: n.tagColor, marginBottom: 3 }}>{n.tag}</div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.3, marginBottom: 4 }}>{n.headline}</div>
-            <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>{n.body}</div>
-            <div style={{ fontSize: 9, color: n.tagColor, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-              <Icons.ExternalLink s={10} c={n.tagColor} /> Click to read source
-            </div>
-          </div>
-        </a>
-      ))}
+    <div style={{ width: "100%", marginTop: 6 }}>
+      {/* Live feed indicator */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, padding: "4px 8px", background: "#0f172a", borderRadius: 6, border: "1px solid #1e293b" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: live ? "#10b981" : "#eab308", boxShadow: live ? "0 0 6px #10b981" : "none" }} />
+          <span style={{ fontSize: 9, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
+            {live ? "Live AI Safety News · Auto-refreshes every week" : "Showing cached news · Will refresh when connected"}
+          </span>
+        </div>
+        {fetchedAt && (
+          <span style={{ fontSize: 8, color: "#475569" }}>
+            Updated: {new Date(fetchedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {articles.slice(0, 6).map((n, i) => {
+          const color = n.tagColor || NEWS_TAG_COLORS[i % NEWS_TAG_COLORS.length];
+          const IconComp = n.isIndia ? Icons.Globe : NEWS_ICONS[i % NEWS_ICONS.length];
+          return (
+            <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
+              style={{ textDecoration: "none", borderRadius: 10, padding: "10px 12px", border: `1px solid ${color}40`, background: `${color}0d`, display: "flex", gap: 10, cursor: "pointer", transition: "background 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = `${color}1a`}
+              onMouseLeave={e => e.currentTarget.style.background = `${color}0d`}>
+              <div style={{ flexShrink: 0, marginTop: 2 }}><IconComp s={18} c={color} /></div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1.5, color, marginBottom: 3 }}>
+                  {n.isIndia && "🇮🇳 "}{n.tag}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.3, marginBottom: 4 }}>{n.headline}</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>{n.body}</div>
+                <div style={{ fontSize: 9, color, marginTop: 4, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Icons.ExternalLink s={10} c={color} /> Read source</span>
+                  {n.source && <span style={{ color: "#475569", fontStyle: "italic" }}>— {n.source}</span>}
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
