@@ -1714,7 +1714,13 @@ export default function PresentationViewer() {
 
       {/* Header */}
       <div style={{ width: "100%", maxWidth: 920, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#374151" }}>IIT Patna · AI Ethics Masterclass · 2026</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#374151" }}>IIT Patna · AI Ethics Masterclass · 2026</span>
+          <a href="/mentor.html" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, border: "1px solid #2563EB", background: "#1e3a8a", color: "#93c5fd", fontSize: 10, fontWeight: 700, textDecoration: "none", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Your Mentor
+          </a>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           {slides.map((sl, i) => (
             <button key={i} onClick={() => goToSlide(i)}
