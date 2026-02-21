@@ -1670,29 +1670,7 @@ export default function PresentationViewer() {
         </button>
       </div>
 
-      {/* Speaker Notes */}
-      <div style={{ width: "100%", maxWidth: 920, marginTop: 10, borderRadius: 14, overflow: "hidden", border: "1px solid #1a1f2e" }}>
-        <div style={{ padding: "8px 18px", display: "flex", alignItems: "center", gap: 8, background: "#0f1218", borderBottom: "1px solid #1a1f2e" }}>
-          <Icons.FileText s={13} c="#374151" />
-          <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, color: "#374151" }}>Speaker Notes</span>
-          <span style={{ marginLeft: "auto", fontSize: 10, background: "rgba(37,99,235,0.15)", color: "#60a5fa", border: "1px solid #1d4ed8", borderRadius: 4, padding: "1px 7px" }}>Slide {current + 1}</span>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", background: "#0a0c12" }}>
-          {[
-            ["Core Concept", "#3b82f6", slide.notes.core],
-            ["Hook Data", "#22c55e", slide.notes.hook],
-            ["Interaction", "#f97316", slide.notes.interaction],
-          ].map(([label, col, text], i) => (
-            <div key={i} style={{ padding: "14px 16px", borderRight: i < 2 ? "1px solid #1a1f2e" : "none" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 7 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: col }} />
-                <span style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, color: col }}>{label}</span>
-              </div>
-              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", lineHeight: 1.7, fontStyle: i === 2 ? "italic" : "normal" }}>{text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 }
