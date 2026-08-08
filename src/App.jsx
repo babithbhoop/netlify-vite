@@ -51,8 +51,9 @@ function Link({ href, children, style = {} }) {
 // SLIDE 1: LIVE AI SAFETY NEWS (auto-refreshes weekly)
 // ─────────────────────────────────────────────────────────────────────────────
 const FALLBACK_NEWS = [
-  { tag: "TODAY · APR 24, 2026", tagColor: "#ef4444", headline: "Anthropic's Mythos AI: Too Dangerous to Release — Already Breached", body: "Mythos autonomously found zero-day exploits in Firefox, FreeBSD & every major OS. Deemed too risky for public release. Now accessed by unauthorised users via a third-party vendor. Washington Post: White House scrambling.", url: "https://www.washingtonpost.com/technology/2026/04/24/anthropic-mythos-ai-washington-cybersecurity-hacking-risk/", source: "Washington Post", isIndia: false },
-  { tag: "FEB 9, 2026", tagColor: "#f43f5e", headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"", body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\" and AI-enabled bioweapon risk. Weeks later Anthropic releases Mythos — and withholds it.", url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/", source: "eWeek", isIndia: false },
+  { tag: "JUNE 2026 · UNPRECEDENTED", tagColor: "#ef4444", headline: "US Pulls an AI Model Off the Global Market — Then Reverses in 18 Days", body: "First time in history export controls halted a commercial AI model. Anthropic's Mythos 5 & Fable 5 barred from ALL non-US nationals on June 12 — including allied cyber defenders and Indian engineers at US firms. Anthropic pulled them worldwide. Controls lifted June 30.", url: "https://www.washingtonpost.com/technology/2026/06/30/white-house-drops-export-controls-anthropics-mythos-fable-ai-models/", source: "Washington Post", isIndia: false },
+  { tag: "THE SOVEREIGN AI QUESTION", tagColor: "#f59e0b", headline: "Whose Export Policy Controls Your Nation's Cyber Defence?", body: "The Mythos ban locked out cyber defenders in allied nations overnight. It intensified global calls for sovereign AI — that countries should control the models and infrastructure underpinning critical systems, not depend on another state's policy.", url: "https://www.chathamhouse.org/2026/07/us-governments-latest-u-turn-anthropics-mythos-sends-mixed-signals-ai-governance", source: "Chatham House", isIndia: true },
+  { tag: "FEB 9, 2026", tagColor: "#f43f5e", headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"", body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\" and AI-enabled bioweapon risk. Four months later, his employer's model triggered the first AI export controls in US history.", url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/", source: "eWeek", isIndia: false },
   { tag: "INDIA · FEB 19, 2026", tagColor: "#f97316", headline: "India AI Impact Summit 2026: Modi Calls for \"Glass Box, Not Black Box\" AI", body: "PM Modi opens global summit in New Delhi with 110+ nations. Declares deepfakes \"destabilise open society\" and calls for global trusted data framework.", url: "https://organiser.org/2026/02/19/340845/bharat/ai-impact-summit-glass-box-not-black-box-pm-modi-proposes-3-point-global-framework-for-ethical-ai-ecosystem/", source: "Organiser", isIndia: true },
   { tag: "2025 DATA", tagColor: "#eab308", headline: "487 Deepfake Attacks in Q2 2025 Alone. $347M Lost in 90 Days.", body: "Resemble.ai documents 487 deepfake attacks in Q2 2025, up 41% from prior quarter. Deepfake finance fraud cost $347M in a single quarter.", url: "https://www.scientificamerican.com/article/we-need-laws-to-stop-ai-generated-deepfakes/", source: "Scientific American", isIndia: false },
   { tag: "EXODUS", tagColor: "#a855f7", headline: "AI Safety Researchers Are Running for the Door", body: "OpenAI researcher Zoe Hitzig quits in NYT essay. OpenAI disbands Mission Alignment team. 6 senior AI safety exits in 14 days.", url: "https://edition.cnn.com/2026/02/11/business/openai-anthropic-departures-nightcap", source: "CNN", isIndia: false },
@@ -60,7 +61,7 @@ const FALLBACK_NEWS = [
   { tag: "GLOBAL · 2025", tagColor: "#10b981", headline: "AI Incidents Up 56.4% in One Year", body: "Stanford HAI 2025: AI-related security and privacy incidents rose 56.4% from 2023 to 2024. Facial recognition wrongful arrests continue.", url: "https://purplesec.us/learn/ai-security-risks/", source: "PurpleSec", isIndia: false },
 ];
 
-const NEWS_CACHE_KEY = "ai_ethics_news_v3";
+const NEWS_CACHE_KEY = "ai_ethics_news_v4";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const NEWS_TAG_COLORS = ["#ef4444", "#f97316", "#eab308", "#a855f7", "#06b6d4", "#10b981"];
 const NEWS_ICONS = [Icons.AlertTriangle, Icons.Zap, Icons.Users, Icons.BarChart2, Icons.Shield, Icons.Activity];
@@ -84,10 +85,12 @@ function useWeeklyNews() {
       .then(r => r.json())
       .then(data => {
         if (data.articles && data.articles.length > 0) {
-          // Always pin the Mythos card first — it's the most current story
-          const pinnedCard = FALLBACK_NEWS[0];
-          const deduped = data.articles.filter(a => !a.headline?.includes("Mythos"));
-          const merged = [pinnedCard, ...deduped].slice(0, 6);
+          // Pin the two Mythos/sovereign-AI cards first — the session opens on them
+          const pinnedCards = FALLBACK_NEWS.slice(0, 2);
+          const deduped = data.articles.filter(
+            a => !a.headline?.includes("Mythos") && !a.headline?.includes("Sovereign")
+          );
+          const merged = [...pinnedCards, ...deduped].slice(0, 6);
           const cacheObj = { articles: merged, ts: Date.now(), fetchedAt: data.fetchedAt };
           localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(cacheObj));
           setNews({ articles: merged, live: true, fetchedAt: data.fetchedAt });
