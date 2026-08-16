@@ -980,6 +980,103 @@ function Slide11Visual() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SLIDE 11B: GUARDRAIL TOOLS (startup / individual developer track)
+// ─────────────────────────────────────────────────────────────────────────────
+function Slide11bVisual() {
+  const [card, setCard] = useState(0);
+  const tools = [
+    {
+      name: "Garak", icon: Icons.Terminal, color: "#ef4444", tag: "SCAN",
+      oneLine: "Open-source LLM vulnerability scanner. Point it at your AI feature and it probes for known weaknesses automatically.",
+      finds: "Prompt injection, jailbreaks, toxicity, data leakage, encoding attacks, package hallucination.",
+      how: "pip install garak, then: garak --model_type openai --model_name gpt-4 --probes promptinject",
+      when: "Run before every release. It is an automated red teamer you can put in CI/CD.",
+      cost: "Free / open source (NVIDIA)",
+      url: "https://github.com/NVIDIA/garak",
+    },
+    {
+      name: "Microsoft PyRIT", icon: Icons.Shield, color: "#f97316", tag: "SCAN",
+      oneLine: "Python Risk Identification Toolkit for generative AI, built by the Microsoft AI Red Team.",
+      finds: "Runs structured, multi-turn attack sequences against your own threat scenarios rather than a fixed probe list.",
+      how: "pip install pyrit. Define your scenario, orchestrator and scoring target, then run the attack sequence.",
+      when: "When you have outgrown a scanner and need repeatable, scenario-driven red teaming at enterprise scale.",
+      cost: "Free / open source (Microsoft)",
+      url: "https://github.com/Azure/PyRIT",
+    },
+    {
+      name: "Guardrails AI / NeMo", icon: Icons.Lock, color: "#8b5cf6", tag: "BLOCK",
+      oneLine: "Runtime output filtering. Sits between your model and your user and checks every response before it is delivered.",
+      finds: "Blocks PII leakage, harmful content, off-topic responses, hallucinated facts and unsafe tool calls.",
+      how: "Define validators or Colang rails. The guardrail intercepts the output, validates it, and blocks or rewrites on failure.",
+      when: "Always, in production. This is the bouncer on the door. Scanners find problems, guardrails stop them reaching users.",
+      cost: "Free / open source (Guardrails AI, NVIDIA NeMo)",
+      url: "https://www.guardrailsai.com/docs",
+    },
+    {
+      name: "LlamaGuard", icon: Icons.Eye, color: "#10b981", tag: "BLOCK",
+      oneLine: "Open-source content safety classifier from Meta. Run your model output through it before the user sees it.",
+      finds: "Classifies both prompts and responses against a defined safety taxonomy. Works with any model, not just Llama.",
+      how: "Load from HuggingFace, pass the conversation, receive a safe / unsafe label plus the violated category.",
+      when: "Any user-facing generative feature, especially consumer products or anything reaching minors.",
+      cost: "Free / open source (Meta)",
+      url: "https://huggingface.co/meta-llama/Llama-Guard-3-8B",
+    },
+  ];
+  const t = tools[card];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", marginTop: 6, flex: 1 }}>
+      <div style={{ display: "flex", gap: 10, flex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 150, flexShrink: 0 }}>
+          {tools.map((th, i) => (
+            <button key={i} onClick={() => setCard(i)}
+              style={{ textAlign: "left", padding: "8px 10px", borderRadius: 9, border: `1px solid ${i === card ? th.color : "#1e293b"}`, background: i === card ? `${th.color}15` : "#0a0a0a", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                <th.icon s={14} c={i === card ? th.color : "#475569"} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: i === card ? th.color : "#6b7280" }}>{th.name}</span>
+              </div>
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: 1, color: i === card ? th.color : "#475569" }}>{th.tag}</div>
+            </button>
+          ))}
+          <div style={{ marginTop: 2, padding: "7px 9px", borderRadius: 9, border: "1px solid #16a34a40", background: "#16a34a08" }}>
+            <div style={{ fontSize: 8, fontWeight: 800, color: "#22c55e", letterSpacing: 1, marginBottom: 3 }}>ALL FREE</div>
+            <div style={{ fontSize: 9, color: "#86efac", lineHeight: 1.4 }}>No compliance budget required. You can run all four this week.</div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, borderRadius: 12, border: `1px solid ${t.color}`, padding: 12, background: `${t.color}06`, display: "flex", flexDirection: "column", gap: 7 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: t.color }}>{t.name}</div>
+            <div style={{ fontSize: 9, color: "#22c55e", fontWeight: 700 }}>{t.cost}</div>
+          </div>
+          <div style={{ fontSize: 11, color: "#e2e8f0", lineHeight: 1.5 }}>{t.oneLine}</div>
+          <div style={{ background: "#0f172a", border: `1px solid ${t.color}30`, borderRadius: 8, padding: 8 }}>
+            <div style={{ fontSize: 9, color: t.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>What it catches</div>
+            <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>{t.finds}</div>
+          </div>
+          <div style={{ background: "#0f172a", border: "1px solid #33415560", borderRadius: 8, padding: 8 }}>
+            <div style={{ fontSize: 9, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 }}>How you run it</div>
+            <div style={{ fontSize: 10, color: "#cbd5e1", lineHeight: 1.5, fontFamily: "ui-monospace, monospace" }}>{t.how}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 9, color: "#10b981", fontWeight: 700, marginBottom: 3 }}>WHEN TO REACH FOR IT</div>
+            <div style={{ fontSize: 10, color: "#6ee7b7", lineHeight: 1.5 }}>{t.when}</div>
+          </div>
+          <a href={t.url} target="_blank" rel="noopener noreferrer"
+            style={{ fontSize: 9, color: t.color, display: "flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
+            <Icons.ExternalLink s={10} c={t.color} /> Documentation
+          </a>
+        </div>
+      </div>
+
+      <div style={{ borderRadius: 10, border: "1px solid #ef444440", background: "#ef444408", padding: "8px 11px" }}>
+        <div style={{ fontSize: 9, fontWeight: 800, color: "#ef4444", letterSpacing: 1, marginBottom: 3 }}>YOUR T&amp;Cs DO NOT PROTECT YOU</div>
+        <div style={{ fontSize: 10, color: "#fca5a5", lineHeight: 1.5 }}>Under the EU AI Act and India's DPDP Act the <b>deployer</b> carries responsibility for harm to users. "Outputs are AI generated, we accept no responsibility" may limit some civil liability. It will not stop regulatory action. The tools are the protection.</div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SLIDE 12: GOVERNANCE MATURITY MATRIX
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide12Visual() {
@@ -1465,6 +1562,9 @@ function Slide20Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDES DATA
 // ─────────────────────────────────────────────────────────────────────────────
+// Live-run timings from the 50-minute facilitator script. null = self-explore slide.
+const SLIDE_MINUTES = [9,4,5,3,3,4,null,3,null,null,5,3,2,2,2,1,2,null,null,null,2];
+
 const slides = [
   { id:1, phase:1, phaseLabel:"Phase 1: The Context", title:"This Week. Right Now. In Real Time.", subtitle:"Why today's session is not optional - the alarm bells are already ringing", accent:"#ef4444", visual:"slide1",
     notes:{ core:"Start here: everything on this slide happened in the last 14 days. Sharma resigned from Anthropic on Feb 9. You are sitting in this room on Feb 19. The India AI Summit is happening TODAY in New Delhi. This is not a theoretical future risk. These are working professionals at the world's most resourced AI labs, walking out the door and saying - on the record - 'the world is in peril.' If we cannot govern these systems, who will? The answer, frankly, is you.", hook:"Sharma's exact words: 'The world is in peril. And not just from AI, or bioweapons, but from a whole series of interconnected crises unfolding in this very moment.' Jimmy Ba (xAI co-founder, resigned same week): '2026 is the most consequential year for our species.'", interaction:"Show of hands: how many of you saw a news story about AI safety or AI harm THIS WEEK before coming to this session? Now: how many of you have a governance process in place for your most critical AI system? That gap between the two hands is why we are here." }},
@@ -1488,6 +1588,8 @@ const slides = [
     notes:{ core:"Walk through every stage with the persona doing the work. Sarah the CRO makes a real governance decision in Stage 1. Raj the ML engineer actually runs real code in Stage 2. Priya the data scientist does forensic work in Stage 3. Anil the MLOps engineer sets up automation in Stage 5. These are not the same person. Each stage requires different skills, different authority, different accountability. Most orgs try to do all 5 stages with one data scientist in a weekend. That is not a bias audit. That is a check-box.", hook:"NIST AI RMF 1.0 makes continuous monitoring (Stage 5) part of the MANAGE function - not optional, not best practice. Mandatory for responsible deployment.", interaction:"'At which stage does your current process stop?' Honest poll. Raise hands at each stage when you have to stop. Watch the hands drop. Stage 3 is usually where most hands go down." }},
   { id:11, phase:2, phaseLabel:"Phase 2: The Framework", title:"AI Security Threats", subtitle:"Click each threat card. Know your attack surface.", accent:"#ef4444", visual:"slide11",
     notes:{ core:"AI security is not traditional cybersecurity. Traditional security protects syntax - bad code, malware, SQL injection. AI security protects semantics - meaning, intent, behaviour under distribution shift. An adversarial attack uses clean input. A prompt injection uses natural language. These are invisible to signature-based scanners. Your existing security stack does not cover them.", hook:"Microsoft AI Red Team has conducted 100+ exercises since 2018. In every single LLM agent product they tested, they found at least one prompt injection vulnerability. Not some. Every one.", interaction:"'Your company deploys an LLM agent that can send emails and book meetings. A competitor uploads a document with a hidden instruction. What is the worst one-sentence outcome?' Make it concrete. Make it scare people." }},
+  { id:"11b", phase:2, phaseLabel:"Phase 2: The Framework", title:"Guardrail Tools", subtitle:"No compliance budget? Start here. Click each tool. All four are free.", accent:"#8b5cf6", visual:"slide11b",
+    notes:{ core:"This is the startup and individual developer track. Scanners (Garak, PyRIT) find problems before you ship. Guardrails (Guardrails AI, NeMo, LlamaGuard) stop problems reaching users at runtime. You need both: scanning without runtime filtering means you only catch what you thought to test for. Minimum viable governance is three steps: run Garak against your main AI feature, put one guardrail layer between model and user, and name one accountable person even if that person is you.", hook:"Putting 'outputs are generated by an LLM and we accept no responsibility' in your terms and conditions does not protect you. Under the EU AI Act and India's DPDP Act the deployer carries responsibility for harm to users. The tools are the protection, the T&Cs are a comfort blanket.", interaction:"Which of these four could you realistically have running before Friday? Most teams can do Garak in an afternoon. The barrier is almost never cost or difficulty. It is that nobody has been made responsible for doing it." }},
   { id:12, phase:2, phaseLabel:"Phase 2: The Framework", title:"Governance Architecture", subtitle:"The maturity matrix. Be honest about where you are today.", accent:"#2563EB", visual:"slide12",
     notes:{ core:"Most organisations think they are at level 3 (Defined). Most are actually at level 1 (Ad Hoc). The test: can you name the accountable owner for your 5 most important AI systems right now, without looking anything up? If not, you are ad hoc. The maturity model is not an aspiration - it is a diagnostic. Use it to identify the gap between where you think you are and where you actually are.", hook:"Deloitte 2024: only 16% of organisations have all three layers (People, Process, Technology) in place. 58% have technology tools only. The tools cannot help if there is no human structure to act on what they reveal.", interaction:"'Which column describes your organisation today? Which column do you need to be at to avoid a regulatory fine in the next 18 months?' These are often different answers." }},
   { id:13, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Cards", subtitle:"This is what you need to produce. Take a photo. Take it away.", accent:"#2563EB", visual:"slide13",
@@ -1644,6 +1746,7 @@ function SlideVisual({ type }) {
     slide9: <Slide9Visual />,
     slide10: <Slide10Visual />,
     slide11: <Slide11Visual />,
+    slide11b: <Slide11bVisual />,
     slide12: <Slide12Visual />,
     slide13: <Slide13Visual />,
     slide14: <Slide14Visual />,
@@ -1795,7 +1898,7 @@ export default function PresentationViewer() {
           style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 18px", borderRadius: 9, border: `1px solid ${current === 0 ? "#1f2937" : "#2563EB"}`, background: current === 0 ? "#111" : "#1e3a8a", color: current === 0 ? "#374151" : "#93c5fd", fontWeight: 700, fontSize: 12, cursor: current === 0 ? "not-allowed" : "pointer" }}>
           <Icons.ChevronLeft s={15} c={current === 0 ? "#374151" : "#93c5fd"} /> Previous
         </button>
-        <span style={{ fontSize: 10, color: "#374151" }}>~{5 + (current % 2)} min</span>
+        <span style={{ fontSize: 10, color: SLIDE_MINUTES[current] == null ? "#7c3aed" : "#374151" }}>{SLIDE_MINUTES[current] == null ? "self-paced" : `~${SLIDE_MINUTES[current]} min`}</span>
         <button onClick={() => goToSlide(Math.min(slides.length - 1, current + 1))} disabled={current === slides.length - 1}
           style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 18px", borderRadius: 9, border: `1px solid ${current === slides.length - 1 ? "#1f2937" : "#2563EB"}`, background: current === slides.length - 1 ? "#111" : "#1e3a8a", color: current === slides.length - 1 ? "#374151" : "#93c5fd", fontWeight: 700, fontSize: 12, cursor: current === slides.length - 1 ? "not-allowed" : "pointer" }}>
           Next <Icons.ChevronRight s={15} c={current === slides.length - 1 ? "#374151" : "#93c5fd"} />
