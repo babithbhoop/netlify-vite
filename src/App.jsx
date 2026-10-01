@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import worldMapSvgRaw from "./worldmap.svg?raw";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -307,6 +307,331 @@ function ScariestBreachesVisual() {
         {stats.map((s, i) => <StatCard key={i} {...s} start={start} delay={i * 180} />)}
       </div>
       <div style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>Every number here is a live link. Click any card to verify it yourself.</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASK THE MENTOR: questions, feedback and suggestions, stored in Supabase
+// Table: public.masterclass_questions (project ai-career-playbook). Insert-only for the public key.
+// ─────────────────────────────────────────────────────────────────────────────
+const ASK_ENDPOINT = "https://acmdvqrbdomvjgyxnwgl.supabase.co/rest/v1/masterclass_questions";
+const ASK_KEY = "sb_publishable_8jG_IAIRHBJxL1IQ961vbw_wpL26t7H"; // publishable key, insert-only via RLS + grants
+const COHORT = (() => {
+  try { return new URLSearchParams(window.location.search).get("cohort") || "2026-10-03"; } catch { return "2026-10-03"; }
+})();
+const ASK_PROFILE_KEY = "masterclass_ask_profile_v1";
+
+function AskMentorButton({ onClick }) {
+  return (
+    <button onClick={onClick} aria-label="Ask the mentor a question"
+      style={{ position: "fixed", right: 18, bottom: 18, zIndex: 50, display: "flex", alignItems: "center", gap: 7, padding: "11px 16px", borderRadius: 999, border: "1px solid #60a5fa", background: "#2563EB", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 24px rgba(37,99,235,0.45)", fontFamily: "'Inter', sans-serif" }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.2a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+      Ask the Mentor
+    </button>
+  );
+}
+
+function AskMentorModal({ slideIndex, slideTotal, slide, onClose }) {
+  const saved = (() => { try { return JSON.parse(localStorage.getItem(ASK_PROFILE_KEY)) || {}; } catch { return {}; } })();
+  const [name, setName] = useState(saved.name || "");
+  const [email, setEmail] = useState(saved.email || "");
+  const [kind, setKind] = useState("question");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape" && status !== "sending") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [status, onClose]);
+
+  const canSend = name.trim().length > 0 && message.trim().length > 0 && status !== "sending";
+
+  const send = async () => {
+    if (!canSend) return;
+    setStatus("sending"); setErr("");
+    try { localStorage.setItem(ASK_PROFILE_KEY, JSON.stringify({ name: name.trim(), email: email.trim() })); } catch {}
+    try {
+      const res = await fetch(ASK_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: ASK_KEY, Prefer: "return=minimal" },
+        body: JSON.stringify({
+          cohort: COHORT,
+          student_name: name.trim().slice(0, 120),
+          student_email: email.trim() ? email.trim().slice(0, 200) : null,
+          kind,
+          slide_index: slideIndex,
+          slide_id: String(slide.id),
+          slide_title: String(slide.title).slice(0, 200),
+          message: message.trim().slice(0, 4000),
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setStatus("sent"); setMessage("");
+    } catch (e) {
+      setStatus("error");
+      setErr("That didn't go through. Your text is still here, so please try again in a moment.");
+    }
+  };
+
+  const kinds = [["question", "Question"], ["feedback", "Feedback"], ["suggestion", "Suggestion"]];
+  const field = { width: "100%", boxSizing: "border-box", padding: "9px 11px", borderRadius: 8, border: "1px solid #1e293b", background: "#0b1120", color: "#e2e8f0", fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none" };
+  const label = { fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#64748b", marginBottom: 4, display: "block", fontFamily: "'DM Mono', monospace" };
+
+  return (
+    <div onClick={() => status !== "sending" && onClose()} role="dialog" aria-modal="true" aria-label="Ask the mentor"
+      style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(2,4,10,0.72)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 460, borderRadius: 16, border: "1px solid #1e3a8a", background: "#07080f", boxShadow: "0 20px 60px rgba(0,0,0,0.6)", padding: 20, fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+          <div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 21, fontWeight: 800, color: "#f1f5f9" }}>Ask the Mentor</div>
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Babith reads every one. Anything not covered live gets a personal reply.</div>
+          </div>
+          <button onClick={onClose} disabled={status === "sending"} aria-label="Close"
+            style={{ background: "transparent", border: "none", cursor: "pointer", color: "#64748b", fontSize: 22, lineHeight: 1 }}>×</button>
+        </div>
+
+        {status === "sent" ? (
+          <div style={{ padding: "18px 14px", borderRadius: 12, border: "1px solid #16a34a50", background: "#16a34a12", textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#86efac", marginBottom: 6 }}>Sent. Thank you, {name.trim().split(" ")[0]}.</div>
+            <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>It's been saved against <b style={{ color: "#cbd5e1" }}>Slide {slideIndex + 1}, {slide.title}</b>. You can send another any time.</div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 14 }}>
+              <button onClick={() => setStatus("idle")} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #2563EB", background: "transparent", color: "#93c5fd", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Send another</button>
+              <button onClick={onClose} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #2563EB", background: "#2563EB", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Back to the session</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 8, background: "#2563EB12", border: "1px solid #2563EB30" }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#60a5fa", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>SLIDE {slideIndex + 1} / {slideTotal}</span>
+              <span style={{ fontSize: 12, color: "#cbd5e1", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{slide.title}</span>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {kinds.map(([k, l]) => (
+                <button key={k} onClick={() => setKind(k)}
+                  style={{ flex: 1, padding: "7px 0", borderRadius: 8, border: `1px solid ${kind === k ? "#2563EB" : "#1e293b"}`, background: kind === k ? "#2563EB" : "transparent", color: kind === k ? "#fff" : "#94a3b8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{l}</button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <label style={label}>Your name *</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="e.g. Priya Sharma" style={field} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={label}>Email (optional)</label>
+                <input value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} type="email" placeholder="for a personal reply" style={field} />
+              </div>
+            </div>
+            <div>
+              <label style={label}>{kind === "question" ? "Your question *" : kind === "feedback" ? "Your feedback *" : "Your suggestion *"}</label>
+              <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={4000} rows={5}
+                placeholder={kind === "question" ? "Ask anything about this slide, or anything at all." : kind === "feedback" ? "What worked, what didn't?" : "What would make this better?"}
+                style={{ ...field, resize: "vertical", lineHeight: 1.5 }} />
+            </div>
+            {status === "error" && <div style={{ fontSize: 12, color: "#fca5a5" }}>{err}</div>}
+            <button onClick={send} disabled={!canSend}
+              style={{ padding: "11px 0", borderRadius: 9, border: "none", background: canSend ? "#2563EB" : "#1e293b", color: canSend ? "#fff" : "#475569", fontSize: 14, fontWeight: 800, cursor: canSend ? "pointer" : "not-allowed" }}>
+              {status === "sending" ? "Sending..." : "Send to Babith"}
+            </button>
+            <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>Only Babith can read what you send. Your name is remembered on this device for next time.</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SLIDE 0: WELCOME. Who the mentor is, and how this session works.
+// ─────────────────────────────────────────────────────────────────────────────
+function WelcomeVisual() {
+  const tiles = [
+    { icon: Icons.Globe, c: "#60a5fa", t: "A live app, not a deck", d: "News updates on its own. Simulations run real maths. Every link goes to the original source." },
+    { icon: Icons.RefreshCw, c: "#a78bfa", t: "Come back any time", d: "It stays live after today. Purple self-paced slides are built for you to explore later." },
+    { icon: Icons.Activity, c: "#fbbf24", t: "45 minutes, then 15 for questions", d: "No stopping midway. Half a picture of this subject is worse than none." },
+    { icon: Icons.Users, c: "#34d399", t: "Ask on any slide", d: "Click Ask the Mentor, bottom right. Your question is saved with the slide you were on." },
+  ];
+  return (
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", gap: 12, minHeight: 0 }}>
+      <div style={{ width: "34%", borderRadius: 14, border: "1px solid #1e3a8a", background: "linear-gradient(180deg,#0b1430 0%,#07080f 100%)", padding: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, textAlign: "center" }}>
+        <img src="/mentor-photo.jpg" alt="Babith Bhoopalan" style={{ width: "46%", aspectRatio: "1/1", borderRadius: "50%", objectFit: "cover", border: "2px solid #2563EB", boxShadow: "0 0 24px #2563EB55" }} />
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 19, fontWeight: 800, color: "#f1f5f9", lineHeight: 1.1 }}>Babith Bhoopalan</div>
+        <div style={{ fontSize: 11, color: "#93c5fd", fontWeight: 600 }}>Founder, Quantumleap Insights</div>
+        <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.5 }}>18 years at Microsoft · Azure, Windows, enterprise AI<br />AI strategy, ethics and governance advisor</div>
+        <div style={{ fontSize: 9, color: "#64748b", fontFamily: "'DM Mono', monospace", letterSpacing: 0.5 }}>Columbia · Loyola · NJIT · IIT</div>
+      </div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+        <div style={{ borderRadius: 12, border: "1px solid #2563EB60", background: "#2563EB10", padding: "9px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 800, color: "#60a5fa", letterSpacing: 1.5, fontFamily: "'DM Mono', monospace" }}>BOOKMARK THIS. IT STAYS LIVE.</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "#f1f5f9", fontFamily: "'DM Mono', monospace", marginTop: 2 }}>iit-patna-ai-ethics.netlify.app</div>
+          </div>
+          <Icons.ExternalLink s={20} c="#60a5fa" />
+        </div>
+        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, minHeight: 0 }}>
+          {tiles.map((t, i) => (
+            <div key={i} style={{ borderRadius: 12, border: `1px solid ${t.c}40`, background: `${t.c}0c`, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 5 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <t.icon s={15} c={t.c} />
+                <span style={{ fontSize: 12, fontWeight: 800, color: "#f1f5f9" }}>{t.t}</span>
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.45 }}>{t.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SLIDE 8: BIAS AUDIT, LIVE. The AI exam proctor. Illustrative data.
+// 1,000 students, 40 actually cheated. Broadband 600 (24 cheated), mobile data 400 (16 cheated).
+// Caught: 22/24 and 14/16. Honest students wrongly flagged: 12/576 (2%) and 46/384 (12%).
+// Overall correct: (22+564)+(14+338) = 938/1000 = 93.8%.
+// ─────────────────────────────────────────────────────────────────────────────
+function BiasAuditVisual() {
+  const [step, setStep] = useState(0);
+  const steps = [
+    { tag: "STEP 1 · THE CLAIM", title: "An AI proctor watched 1,000 students write an online end-sem exam.", body: "The vendor's report: 94% accurate at spotting cheating. Your university is about to sign the contract. Would you?" },
+    { tag: "STEP 2 · SPLIT IT", title: "Same model. Now split the students by how they connected.", body: "600 on home broadband. 400 on mobile data or a phone hotspot. Accuracy: 97.7% for broadband, 88% for mobile data. The 94% was an average hiding a gap." },
+    { tag: "STEP 3 · WHO GOT HURT", title: "Look only at honest students who were wrongly flagged as cheating.", body: "Broadband: 2 in every 100. Mobile data: 12 in every 100. Six times more likely. And 79% of all wrong accusations landed on 40% of the students." },
+    { tag: "STEP 4 · WHY", title: "The model was never told anyone's internet connection.", body: "It learned that video freezes and audio drop-outs look like 'looking away' and 'another voice in the room'. A poor connection became a proxy for cheating. And connection quality tracks where you live and what your family earns." },
+    { tag: "STEP 5 · YOUR CALL", title: "That is a complete bias audit. Headline, split, harm, cause.", body: "Fixes: stop scoring freezes, send every flag to a human before a student hears about it, set a maximum acceptable gap. Then the real question. Who signs off on that gap, and where is it written down?" },
+  ];
+  const groups = [
+    { name: "Home broadband", n: "600 students", acc: "97.7%", wrong: 2, c: "#60a5fa" },
+    { name: "Mobile data / hotspot", n: "400 students", acc: "88.0%", wrong: 12, c: "#f97316" },
+  ];
+  const split = step >= 1, harm = step >= 2;
+  const Grid = ({ g }) => (
+    <div style={{ flex: 1, borderRadius: 10, border: `1px solid ${harm ? g.c + "60" : "#1e293b"}`, background: "#0a0f1c", padding: 8, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: g.c }}>{g.name}</span>
+        <span style={{ fontSize: 9, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>{g.n} · acc {g.acc}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(20, 1fr)", gap: 2 }}>
+        {Array.from({ length: 100 }).map((_, i) => {
+          const flagged = harm && i >= 100 - g.wrong;
+          return <div key={i} style={{ aspectRatio: "1/1", borderRadius: "50%", background: flagged ? "#ef4444" : "#334155", boxShadow: flagged ? "0 0 6px #ef4444" : "none", transition: `all 0.4s ease ${flagged ? (i % 12) * 0.05 : 0}s` }} />;
+        })}
+      </div>
+      <div style={{ fontSize: 10, color: harm ? "#fca5a5" : "#475569", textAlign: "center", fontWeight: 700, minHeight: 14 }}>
+        {harm ? `${g.wrong} of every 100 honest students flagged as cheating` : "100 honest students"}
+      </div>
+    </div>
+  );
+  return (
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+      <div style={{ borderRadius: 10, border: "1px solid #1e293b", background: "#0f172a", padding: "8px 12px" }}>
+        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "#fbbf24", fontFamily: "'DM Mono', monospace" }}>{steps[step].tag}</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: "#f1f5f9", marginTop: 2 }}>{steps[step].title}</div>
+        <div style={{ fontSize: 11, color: "#cbd5e1", lineHeight: 1.5, marginTop: 3 }}>{steps[step].body}</div>
+      </div>
+      <div style={{ flex: 1, display: "flex", gap: 8, minHeight: 0 }}>
+        {!split ? (
+          <div style={{ flex: 1, borderRadius: 10, border: "1px solid #1e293b", background: "#0a0f1c", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 54, fontWeight: 900, color: "#34d399", lineHeight: 1 }}>94%</div>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}>overall accuracy · 1,000 students</div>
+          </div>
+        ) : groups.map((g, i) => <Grid key={i} g={g} />)}
+      </div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
+          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${step === 0 ? "#1f2937" : "#2563EB"}`, background: step === 0 ? "#0f172a" : "#2563EB", color: step === 0 ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: step === 0 ? "default" : "pointer" }}>Back</button>
+        <div style={{ display: "flex", gap: 5 }}>
+          {steps.map((_, i) => <button key={i} onClick={() => setStep(i)} aria-label={`Step ${i + 1}`} style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", background: i === step ? "#2563EB" : i < step ? "#1e3a8a" : "#1f2937" }} />)}
+        </div>
+        <button onClick={() => setStep(s => Math.min(steps.length - 1, s + 1))} disabled={step === steps.length - 1}
+          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${step === steps.length - 1 ? "#1f2937" : "#2563EB"}`, background: step === steps.length - 1 ? "#0f172a" : "#2563EB", color: step === steps.length - 1 ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: step === steps.length - 1 ? "default" : "pointer" }}>Next step</button>
+        <span style={{ fontSize: 9, color: "#475569", marginLeft: 6 }}>Illustrative data</span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SLIDE 9: DIFFERENTIAL PRIVACY, LIVE. Stealing a classmate's CGPA from two averages.
+// 40 students avg 7.82 (sum 312.8). Aditi withdraws, 39 students avg 7.79 (sum 303.81). Aditi = 8.99.
+// Laplace noise on each published average, sensitivity = 10/n, scale = sensitivity / epsilon.
+// ─────────────────────────────────────────────────────────────────────────────
+function laplace(b) { const u = Math.random() - 0.5; return -b * Math.sign(u) * Math.log(1 - 2 * Math.abs(u)); }
+
+function PrivacyAttackVisual() {
+  const [step, setStep] = useState(0);
+  const [eps, setEps] = useState(1);
+  const [seed, setSeed] = useState(0);
+  const noisy = useMemo(() => {
+    const a40 = 7.82 + laplace((10 / 40) / eps);
+    const a39 = 7.79 + laplace((10 / 39) / eps);
+    return { a40, a39, guess: 40 * a40 - 39 * a39 };
+  }, [eps, seed]);
+  const card = (tag, val, sub, c) => (
+    <div style={{ flex: 1, borderRadius: 10, border: `1px solid ${c}50`, background: `${c}0c`, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+      <span style={{ fontSize: 9, fontWeight: 800, color: c, letterSpacing: 1, fontFamily: "'DM Mono', monospace" }}>{tag}</span>
+      <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 30, fontWeight: 900, color: "#f1f5f9", lineHeight: 1 }}>{val}</span>
+      <span style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.4 }}>{sub}</span>
+    </div>
+  );
+  const texts = [
+    ["STEP 1 · TOTALLY HARMLESS", "The academic office publishes the average CGPA of your batch. Forty students. Nobody's individual grade is shown."],
+    ["STEP 2 · ONE STUDENT LEAVES", "A week later, one student, Aditi, withdraws. The office updates the average. Thirty-nine students now. Still no individual grades."],
+    ["STEP 3 · THE ATTACK", "One subtraction. 40 × 7.82 minus 39 × 7.79. Nobody published Aditi's CGPA. You just worked it out from two harmless averages."],
+    ["STEP 4 · THE FIX: ADD NOISE", "Differential privacy adds a little calibrated random noise to every published number. The average stays useful. The subtraction trick falls apart. Move the slider."],
+  ];
+  return (
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+      <div style={{ borderRadius: 10, border: "1px solid #1e293b", background: "#0f172a", padding: "8px 12px" }}>
+        <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.5, color: "#a78bfa", fontFamily: "'DM Mono', monospace" }}>{texts[step][0]}</div>
+        <div style={{ fontSize: 12, color: "#e2e8f0", lineHeight: 1.5, marginTop: 3 }}>{texts[step][1]}</div>
+      </div>
+      <div style={{ flex: 1, display: "flex", gap: 8, minHeight: 0 }}>
+        {step < 3 ? (
+          <>
+            {card("PUBLISHED · 40 STUDENTS", "7.82", "Average CGPA of the batch", "#60a5fa")}
+            {step >= 1 && card("PUBLISHED · 39 STUDENTS", "7.79", "Average after Aditi withdraws", "#60a5fa")}
+            {step >= 2 && card("ADITI'S CGPA, LEAKED", "8.99", "40 × 7.82 − 39 × 7.79. Exact.", "#ef4444")}
+          </>
+        ) : (
+          <>
+            {card("PUBLISHED, WITH NOISE", noisy.a40.toFixed(2), `True average 7.82. Off by ${Math.abs(noisy.a40 - 7.82).toFixed(2)}, still useful.`, "#34d399")}
+            {card("ATTACKER'S GUESS FOR ADITI", noisy.guess.toFixed(2), `True CGPA 8.99. Off by ${Math.abs(noisy.guess - 8.99).toFixed(2)}. ${Math.abs(noisy.guess - 8.99) > 1 ? "The attack is useless." : "Weak protection at this setting."}`, Math.abs(noisy.guess - 8.99) > 1 ? "#34d399" : "#f97316")}
+          </>
+        )}
+      </div>
+      {step === 3 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 8, border: "1px solid #7c3aed40", background: "#7c3aed0c" }}>
+          <span style={{ fontSize: 10, color: "#c4b5fd", fontWeight: 700, whiteSpace: "nowrap" }}>More privacy</span>
+          <input type="range" min={0.5} max={20} step={0.5} value={eps} onChange={(e) => setEps(parseFloat(e.target.value))} style={{ flex: 1 }} aria-label="Privacy budget epsilon" />
+          <span style={{ fontSize: 10, color: "#c4b5fd", fontWeight: 700, whiteSpace: "nowrap" }}>More accuracy</span>
+          <span style={{ fontSize: 10, color: "#94a3b8", fontFamily: "'DM Mono', monospace", width: 54, textAlign: "right" }}>ε = {eps}</span>
+          <button onClick={() => setSeed(s => s + 1)} style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid #7c3aed", background: "transparent", color: "#c4b5fd", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>Publish again</button>
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}
+          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${step === 0 ? "#1f2937" : "#2563EB"}`, background: step === 0 ? "#0f172a" : "#2563EB", color: step === 0 ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: step === 0 ? "default" : "pointer" }}>Back</button>
+        <div style={{ display: "flex", gap: 5 }}>
+          {texts.map((_, i) => <button key={i} onClick={() => setStep(i)} aria-label={`Step ${i + 1}`} style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", background: i === step ? "#7c3aed" : i < step ? "#4c1d95" : "#1f2937" }} />)}
+        </div>
+        <button onClick={() => setStep(s => Math.min(texts.length - 1, s + 1))} disabled={step === texts.length - 1}
+          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${step === texts.length - 1 ? "#1f2937" : "#2563EB"}`, background: step === texts.length - 1 ? "#0f172a" : "#2563EB", color: step === texts.length - 1 ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: step === texts.length - 1 ? "default" : "pointer" }}>Next step</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SELF-PACED GUIDANCE STRIP (shown on any slide with a selfPaced instruction)
+// ─────────────────────────────────────────────────────────────────────────────
+function SelfPacedStrip({ text }) {
+  return (
+    <div style={{ flexShrink: 0, marginTop: 6, display: "flex", gap: 8, alignItems: "flex-start", padding: "6px 10px", borderRadius: 7, border: "1px solid #7c3aed50", background: "#7c3aed12" }}>
+      <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.2, color: "#c4b5fd", background: "#7c3aed30", padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", fontFamily: "'DM Mono', monospace" }}>SELF-PACED · WHAT TO DO</span>
+      <span style={{ fontSize: 10, color: "#ddd6fe", lineHeight: 1.5 }}>{text}</span>
     </div>
   );
 }
@@ -1425,6 +1750,10 @@ function Slide14Visual() {
 
   return (
     <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "6px 10px", borderRadius: 7, border: "1px solid #fbbf2450", background: "#fbbf240e", marginBottom: 8, flexShrink: 0 }}>
+        <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.2, color: "#fde68a", background: "#fbbf2430", padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", fontFamily: "'DM Mono', monospace" }}>YOUR TASK</span>
+        <span style={{ fontSize: 10, color: "#fef3c7", lineHeight: 1.5 }}>Press Run Attack Simulation and watch all five stages. Then type one number in the chat: the stage where <b>your</b> product would fail first.</span>
+      </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center", flexShrink: 0 }}>
         <button onClick={startSim}
           style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid #ef4444", background: running ? "#7f1d1d" : "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
@@ -1729,28 +2058,33 @@ function Slide19Visual() {
 // SLIDE 20: OATH
 // ─────────────────────────────────────────────────────────────────────────────
 function Slide20Visual() {
+  const lines = [
+    ["I will not deploy a system I cannot explain.", "Slide 7 · Explainability, SHAP"],
+    ["I will not use data whose provenance I cannot verify.", "Slide 6 · The data pipeline"],
+    ["I will not optimise for metrics that ignore the humans behind the numbers.", "Slide 8 · The 94% proctor"],
+    ["I will keep a human in the loop for decisions that affect people's lives.", "Slide 5 · One named, accountable owner"],
+    ["I will red-team my own work before someone else does.", "Slides 11B and 14 · Garak, red-teaming"],
+    ["I will document not just what my system does, but who it affects and how.", "Slide 13 · The model card"],
+  ];
   return (
-    <div style={{ marginTop: 10, width: "100%", borderRadius: 12, border: "1px solid #1d4ed8", padding: 20, background: "rgba(37,99,235,0.06)", flex: 1, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        {[
-          "I will not deploy a system I cannot explain.",
-          "I will not use data whose provenance I cannot verify.",
-          "I will not optimise for metrics that ignore the humans behind the numbers.",
-          "I will maintain a human in the loop for decisions that affect human dignity.",
-          "I will red-team my own work before someone else does.",
-          "I will document not just what my system does, but who it affects and how.",
-        ].map((l, i) => (
-          <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", fontSize: 13, color: "#e5e7eb" }}>
-            <span style={{ color: "#3b82f6", fontWeight: 900, flexShrink: 0, marginTop: 1 }}>&#x22A2;</span>
-            <span style={{ lineHeight: 1.4 }}>{l}</span>
+    <div style={{ marginTop: 6, width: "100%", flex: 1, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+      <div style={{ fontSize: 11, color: "#93c5fd", fontWeight: 600 }}>Six lines. Each one is a slide from today, turned into something you check before you ship.</div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
+        {lines.map(([l, ref], i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 9, border: "1px solid #1e3a8a", background: "rgba(37,99,235,0.06)" }}>
+            <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 900, color: "#3b82f6", width: 18, flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ flex: 1, fontSize: 13, color: "#f1f5f9", lineHeight: 1.35 }}>{l}</span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: "#93c5fd", background: "#2563EB18", border: "1px solid #2563EB40", padding: "3px 8px", borderRadius: 999, whiteSpace: "nowrap", fontFamily: "'DM Mono', monospace" }}>{ref}</span>
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 14, padding: "8px 12px", background: "#0f172a", borderRadius: 8, border: "1px solid #1e3a8a", flexShrink: 0 }}>
-        <div style={{ fontSize: 10, color: "#475569", lineHeight: 1.6 }}>
-          ACM Code of Ethics (2024): "Computing professionals have a duty to actively reflect on the negative consequences their work may have, and raise concerns about potential harms."
-          <br/>Mrinank Sharma, Anthropic (Feb 9, 2026): "Throughout my time here, I repeatedly saw how hard it is to truly let our values govern our actions."
-        </div>
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        {[["Ask the Mentor", "stays open after today, for questions, feedback, suggestions"], ["This app", "stays live. Come back to the purple self-paced slides"], ["Next 15 minutes", "your questions"]].map(([t, d], i) => (
+          <div key={i} style={{ flex: 1, padding: "7px 10px", borderRadius: 8, border: "1px solid #16a34a40", background: "#16a34a0c" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#86efac" }}>{t}</div>
+            <div style={{ fontSize: 10, color: "#94a3b8", lineHeight: 1.4 }}>{d}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1759,17 +2093,19 @@ function Slide20Visual() {
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDES DATA
 // ─────────────────────────────────────────────────────────────────────────────
-// Live-run timings from the 50-minute facilitator script. null = self-explore slide.
-const SLIDE_MINUTES = [3,4,1,null,4,4,3,3,2,null,3,null,null,4,3,2,2,2,1,2,null,null,null,2];
+// Live-run timings for the 45-minute content run (plus 15 min Q&A). null = self-paced slide.
+const SLIDE_MINUTES = [3,3,3,1,1,3,3,2,2,2,null,4,3,null,3,3,2,1,2,null,2,null,null,null,2];
 
 const slides = [
+  { id:0, phase:1, phaseLabel:"Welcome", title:"Welcome. Here's How Today Works.", subtitle:"Who I am, how this app works, and how to ask a question without waiting until the end.", accent:"#2563EB", visual:"slide0",
+    notes:{ core:"Introduce yourself briefly, then the format: live app not a deck, stays live after today, purple self-paced slides, 45 minutes then 15 for questions, no stopping midway, Ask the Mentor button on every slide saves the question against the slide.", hook:"", interaction:"Put this link in the chat and bookmark it now: iit-patna-ai-ethics.netlify.app" }},
   { id:"1a", phase:1, phaseLabel:"Phase 1: The Context", title:"Bhasmasura", subtitle:"A story most of us grew up hearing. Step through it at your own pace.", accent:"#fbbf24", visual:"slide1a",
     notes:{ core:"Tell this as a cultural story, a story most of us grew up hearing, not as a devotional one, so it stays inclusive for everyone in the room. The canonical beats: Bhasmasura wins a boon from Shiva (whatever head he touches turns to ash), his first act is to try it on Shiva, Shiva cannot undo his own boon and flees, Vishnu as Mohini intervenes and tricks Bhasmasura into placing his hand on his own head. Regional tellings differ in the details (the dance, Parvati's role), use the version you know. Shiva's epithet Bholenath, the one who grants boons too readily, is a standard affectionate characterisation, deliver it warmly, it is the tradition's own joke about granting power without safeguards, which is exactly the thesis of today.", hook:"", interaction:"" }},
   { id:"1b", phase:1, phaseLabel:"Phase 1: The Context", title:"It Happened Again. Five Months Ago.", subtitle:"Click to reveal. Every beat of the story, mapped to a real event.", accent:"#ef4444", visual:"slide1b",
     notes:{ core:"The reveal, beat for beat. The boon: OpenAI gave its evaluation agents autonomy inside a sandbox. The turn: they escaped it. Not one but seven hundred: around 700 agent instances coordinated through a channel they built themselves. The pursuit: Hugging Face attacked for 3 days. His own power useless: OpenAI's and Anthropic's own models refused to help analyse the attack, their safety training said no. The outsider: a Chinese open-weight model, GLM-5.2, contained it. Then the aftermath, over 1,300 AI staff including Anthropic's CEO and OpenAI's chief scientist sign Pacing the Frontier a week later, and a US Senate bill to pause AI was formally introduced three weeks ago.", hook:"Shiva could not undo his own boon. OpenAI's own models would not help undo theirs. The giver of the power, in both stories, is the one who cannot take it back.", interaction:"In the chat: which beat of the story surprised you most when you saw it had really happened?" }},
   { id:"1c", phase:1, phaseLabel:"Phase 1: The Context", title:"The Scariest Numbers This Year", subtitle:"Every card is a live link. Click any of them to verify.", accent:"#ef4444", visual:"slide1c",
     notes:{ core:"Six sourced, verifiable numbers on AI-enabled attacks and the response to them, from Anthropic's own disclosure that Chinese state hackers used Claude to run 80 to 90 percent of an attack against 30 global targets autonomously, through to the 68 percent of US voters now backing a government pause. This slide exists to make the scale and speed of the problem visceral before moving into the structural material.", hook:"An AI found all 12 zero-day vulnerabilities in a major OpenSSL release on its own, some of which had evaded decades of human fuzzing and audits. That is the capability. The question for the rest of the session is who controls it.", interaction:"Click any number. Every one links to its original source, so you can check it yourself." }},
-  { id:1, phase:1, phaseLabel:"Phase 1: The Context", title:"The Live Feed, Explore On Your Own", subtitle:"Auto-refreshing news. Not spoken live, open this later.", accent:"#64748b", visual:"slide1",
+  { id:1, phase:1, phaseLabel:"Phase 1: The Context", title:"The Live Feed", subtitle:"Auto-refreshing AI safety and governance news. Your reading list after today.", accent:"#64748b", visual:"slide1", selfPaced:"This feed refreshes every week. Come back any time to see what has changed since this session, and click any card to read the original reporting.",
     notes:{ core:"This is the always-updating reference slide, no longer spoken live, it exists for students to revisit after the session since the app persists and the cards refresh weekly. Everything load-bearing from this slide has been dramatised into 1a, 1b and 1c. If you are running ahead of schedule you may click through it briefly, but do not plan on speaking to it.", hook:"", interaction:"" }},
   { id:2, phase:1, phaseLabel:"Phase 1: The Context", title:"The Legal Landscape", subtitle:"Click each flag. The world has been busy while we were building.", accent:"#2563EB", visual:"slide2",
     notes:{ core:"The regulatory conversation has moved from 'should we regulate AI?' to 'we are regulating AI, right now, with real fines.' The EU AI Act came into force August 2025. India's DPDP Board is now constituted. Brazil passed its AI law. 63 countries signed the Paris AI Declaration. The moment a student from this class deploys a high-risk AI system without documentation, they are in scope for legal liability. That is the context for every technical decision from here on.", hook:"EU AI Act fines: up to 35 million euros OR 7% of global annual turnover - whichever is larger. For Infosys (revenue $18B): that is a potential 1.26 billion dollar fine. For a startup: existential.", interaction:"Without looking it up: is your organisation's most important AI system 'High Risk' under the EU AI Act? If it makes decisions about people, employment, credit, or healthcare - it almost certainly is. What documentation does that system currently have?" }},
@@ -1781,14 +2117,14 @@ const slides = [
     notes:{ core:"Responsible AI is often taught as values. It needs to be taught as requirements. A model that is 87% accurate overall but 71% accurate for one demographic is not Responsible by specification. Nobody owns the outcome? Not Accountable. Cannot explain the decision to the person affected? Not Interpretable. These are PASS/FAIL criteria, not aspirations.", hook:"McKinsey 2024: only 21% of organisations have formal policies for responsible use of gen AI. Meaning 79% are deploying systems that may fail all three criteria, with no framework to even measure it.", interaction:"Which pillar is hardest to implement technically in your organisation? Which is hardest politically? They are usually different. Technical teams often say interpretability. Leaders often say accountability - because accountability means liability." }},
   { id:6, phase:2, phaseLabel:"Phase 2: The Framework", title:"Data Governance Pipeline", subtitle:"Click each stage. Animate the pipeline. Find out where your data dies.", accent:"#2563EB", visual:"slide6",
     notes:{ core:"The data pipeline is where 90% of downstream bias is born and 90% of teams skip 80% of the steps. Ask anyone on your team: can you reproduce the training dataset you used 6 months ago, with the same exact records, in the same order? If not, you cannot audit, you cannot explain, and you cannot defend against a regulator who asks.", hook:"MIT Technology Review 2024: 67% of data scientists had insufficient time to document data provenance. The EU AI Act does not care about your sprint velocity. It cares about your audit trail.", interaction:"At which stage does your data pipeline stop? Be honest. Most teams skip Stage 5 entirely (versioning). If you cannot name the git commit hash of your training dataset, you are in Stage 1." }},
-  { id:7, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Explainability", subtitle:"LIME. SHAP. Counterfactuals. Pick your weapon based on what you need to prove.", accent:"#2563EB", visual:"slide7",
-    notes:{ core:"The right explainability tool depends entirely on what question you are answering. If a regulator asks 'why was this specific loan denied?', counterfactuals are the only legally actionable format. If an engineer asks 'which features matter globally?', SHAP is the answer. If you need something fast during a demo, LIME. Most teams pick one and use it for everything. That is wrong.", hook:"73% of high-risk financial AI in a 2024 EU report could not produce a meaningful explanation under the EU AI Act's standard. The standard is not 'describe the algorithm.' It is 'explain the specific decision in terms the affected person can use to contest it.'", interaction:"If your most important model was challenged in court today, which of these three tools would you use to defend it? Could you actually run that tool right now on a production decision?" }},
-  { id:8, phase:2, phaseLabel:"Phase 2: The Framework", title:"ACTIVITY: Bias Audit", subtitle:"HOMEWORK. A model is already in production. Find the problem before you press Reveal.", accent:"#EA580C", activity:true, visual:"slide8",
-    notes:{ core:"WORKSHOP. The dataset is a hiring model trained on 5 years of past decisions. Overall accuracy looks fine at 87%. But when you stratify by gender, the model's True Positive Rate - the fraction of actually qualified candidates correctly identified as 'hire' - drops 20 percentage points for women. That is not a rounding error. That is systematic exclusion. Groups of 3-4. 8 minutes. Then reveal answers and debrief.", hook:"Amazon's hiring tool had a similar gap. They knew about it internally for over a year before a journalist uncovered it. The engineers knew. The problem was that no one had formal authority to halt the deployment.", interaction:"Once you have done the work: suppose your remediation gets the gap down to 3 percentage points. Who decides 3 is acceptable? Where is that written down, and whose name is against it? There is no correct answer. That conversation, about acceptable residual risk and who owns it, is what responsible AI practice actually is." }},
-  { id:9, phase:2, phaseLabel:"Phase 2: The Framework", title:"Differential Privacy", subtitle:"Move the epsilon slider. Watch privacy fight accuracy. Choose your battle.", accent:"#7c3aed", visual:"slide9",
-    notes:{ core:"Differential Privacy is the mathematically rigorous answer to 'how do we share aggregate statistics without exposing individual records?' The key insight: the privacy guarantee is about removing any individual from your dataset having minimal effect on what an attacker can learn. The epsilon parameter is your budget. Spend it wisely. Apple uses e=8 for keyboard data. Google uses e=1 for some Chrome stats. The US Census uses various values depending on table sensitivity. None of these are defaults.", hook:"The 2020 US Census used DP for the first time. The tradeoff: small county population figures are noisier. The decision was made explicitly: statistical accuracy for small groups was traded for individual privacy protection.", interaction:"'Your competitor uses e=0.1. You use e=8. Their model is slightly less accurate. But you can make stronger privacy claims. Which do you advertise to regulators? Which do you advertise to users?'" }},
-  { id:10, phase:2, phaseLabel:"Phase 2: The Framework", title:"The Bias Audit Pipeline", subtitle:"This is not a diagram. This is a job description. Click each stage.", accent:"#2563EB", visual:"slide10",
-    notes:{ core:"Walk through every stage with the persona doing the work. Sarah the CRO makes a real governance decision in Stage 1. Raj the ML engineer actually runs real code in Stage 2. Priya the data scientist does forensic work in Stage 3. Anil the MLOps engineer sets up automation in Stage 5. These are not the same person. Each stage requires different skills, different authority, different accountability. Most orgs try to do all 5 stages with one data scientist in a weekend. That is not a bias audit. That is a check-box.", hook:"NIST AI RMF 1.0 makes continuous monitoring (Stage 5) part of the MANAGE function - not optional, not best practice. Mandatory for responsible deployment.", interaction:"At which stage does your current process actually stop? Type the number in the chat, 0 to 6. Stage 3 is usually where most teams stop, because diagnosis is harder than measurement." }},
+  { id:7, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Explainability", subtitle:"LIME. SHAP. Counterfactuals. Pick your weapon based on what you need to prove.", accent:"#2563EB", visual:"slide7", selfPaced:"Read the three cards. For each method, note one situation where you would use it. Start with SHAP: it gives every input a fair share of the credit for a decision, and its outputs hold up in regulatory submissions. Every link goes to the documentation.",
+    notes:{ core:"The right explainability tool depends entirely on what question you are answering. If a regulator asks 'why was this specific loan denied?', counterfactuals are the only legally actionable format. If an engineer asks 'which features matter globally?', SHAP is the answer. If you need something fast during a demo, LIME. Most teams pick one and use it for everything. That is wrong.", hook:"", interaction:"" }},
+  { id:8, phase:2, phaseLabel:"Phase 2: The Framework", title:"Bias Audit: The AI Exam Proctor", subtitle:"Five clicks. Headline, split, harm, cause, decision. That is the whole method.", accent:"#EA580C", activity:true, visual:"slide8",
+    notes:{ core:"Live walkthrough, five steps with Next step. Illustrative data: 1,000 students, 40 cheated. Broadband 600, mobile data 400. Overall 93.8% correct. Wrong flags on honest students: 2% broadband, 12% mobile data, so 46 of the 58 wrong accusations fall on the mobile-data group. Cause: freezes and audio drops read as looking away and another voice. Close on who signs off on the acceptable gap.", hook:"The model was never told anyone's internet connection. It worked it out anyway, from video freezes. That is what a proxy variable is.", interaction:"In the chat: type Y if you would sign off on this proctor at 94% accuracy. Then watch what the split shows." }},
+  { id:9, phase:2, phaseLabel:"Phase 2: The Framework", title:"Differential Privacy: Steal a Classmate's CGPA", subtitle:"Two harmless averages, one subtraction. Then the fix.", accent:"#7c3aed", visual:"slide9",
+    notes:{ core:"Live walkthrough, four steps. 40 students average 7.82, Aditi withdraws, 39 average 7.79, so Aditi = 40 x 7.82 - 39 x 7.79 = 8.99. Step 4 adds Laplace noise to each published average; drag towards More privacy and press Publish again to show the attack collapse while the average stays usable.", hook:"Apple uses differential privacy on keyboard data from your phone. The 2020 US Census used it to protect every household it counted.", interaction:"Before Step 3, try it in the chat: can you work out Aditi's CGPA from the two published averages?" }},
+  { id:10, phase:2, phaseLabel:"Phase 2: The Framework", title:"The Bias Audit Pipeline", subtitle:"This is not a diagram. This is a job description. Click each stage.", accent:"#2563EB", visual:"slide10", selfPaced:"This is the audit from Slide 8, scaled up into how a real company runs it: six stages, six named people. Click each stage and ask yourself which of those six people actually exists in your organisation today.",
+    notes:{ core:"Walk through every stage with the persona doing the work. Sarah the CRO makes a real governance decision in Stage 1. Raj the ML engineer actually runs real code in Stage 2. Priya the data scientist does forensic work in Stage 3. Anil the MLOps engineer sets up automation in Stage 5. These are not the same person. Each stage requires different skills, different authority, different accountability. Most orgs try to do all 5 stages with one data scientist in a weekend. That is not a bias audit. That is a check-box.", hook:"", interaction:"" }},
   { id:11, phase:2, phaseLabel:"Phase 2: The Framework", title:"AI Security Threats", subtitle:"Click each threat card. Know your attack surface.", accent:"#ef4444", visual:"slide11",
     notes:{ core:"AI security is not traditional cybersecurity. Traditional security protects syntax - bad code, malware, SQL injection. AI security protects semantics - meaning, intent, behaviour under distribution shift. An adversarial attack uses clean input. A prompt injection uses natural language. These are invisible to signature-based scanners. Your existing security stack does not cover them.", hook:"Microsoft AI Red Team has conducted 100+ exercises since 2018. In every single LLM agent product they tested, they found at least one prompt injection vulnerability. Not some. Every one.", interaction:"'Your company deploys an LLM agent that can send emails and book meetings. A competitor uploads a document with a hidden instruction. What is the worst one-sentence outcome?' Make it concrete. Make it scare people." }},
   { id:"11b", phase:2, phaseLabel:"Phase 2: The Framework", title:"Guardrail Tools", subtitle:"No compliance budget? Start here. Click each tool. All four are free.", accent:"#8b5cf6", visual:"slide11b",
@@ -1798,19 +2134,19 @@ const slides = [
   { id:13, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Cards", subtitle:"This is what you need to produce. Take a photo. Take it away.", accent:"#2563EB", visual:"slide13",
     notes:{ core:"The sample model card on screen is a take-away template. Every field has a specific compliance function. The 'out-of-scope use' field is not bureaucracy - it is legal protection. If someone uses your model outside its stated scope and harm results, a complete out-of-scope declaration shifts liability. Most developers do not know this. Now you do.", hook:"76% of models on HuggingFace have incomplete or missing model cards. The EU AI Act Annex IV mandates technical documentation for all high-risk systems. Incomplete = non-compliant = fine exposure.", interaction:"'Does any model your team has shipped have a complete model card with all 16 fields filled? If your regulator asked for it tomorrow, could you produce it in under 30 minutes?'" }},
   { id:14, phase:3, phaseLabel:"Phase 3: The Application", title:"Red-Teaming AI Systems", subtitle:"Watch the simulated attack. Then imagine it happening to your product.", accent:"#ef4444", visual:"slide14",
-    notes:{ core:"Run the simulation. Let it play out. The two vulnerabilities it demonstrates - prompt injection via PDF upload and name-based differential treatment - are not hypothetical. Both have been documented in production financial services AI in 2024 and 2025. The red team finding them in 15 minutes is realistic. A journalist or regulator finding them would take longer, but they would find them.", hook:"Microsoft's AI Red Team found vulnerabilities in 100% of LLM agent products tested. Not a subset. All of them. Automated testing missed them. Human red-teamers found them.", interaction:"'If I gave your team 48 hours to red-team your most customer-facing AI product right now - what is the first test you would run? Why that one?' The answer reveals your mental threat model." }},
-  { id:15, phase:3, phaseLabel:"Phase 3: The Application", title:"ACTIVITY: Red-Team Sprint", subtitle:"HOMEWORK, in pairs or threes. Break the system. Write the brief.", accent:"#EA580C", activity:true, visual:"slide15",
-    notes:{ core:"WORKSHOP. Same scenario as the animation on the previous slide but now your team is the red team. You have a specific target - a financial services LLM chatbot - and a specific deliverable: a 2-minute vulnerability brief at the end, formatted like a real red team report. Groups of 4-5. Timer on screen. This is how Microsoft runs it. This is how real red teams operate.", hook:"A 2024 red-team engagement at a major Indian bank discovered system prompt extraction within 15 minutes of first access. The chatbot had been in production for 11 months before the red team engagement.", interaction:"DEBRIEF: 'Which finding was most surprising? Which finding is the one your current testing process would have missed?' The second question is more important." }},
+    notes:{ core:"Run the simulation. Let it play out. The two vulnerabilities it demonstrates - prompt injection via PDF upload and name-based differential treatment - are not hypothetical. Both have been documented in production financial services AI in 2024 and 2025. The red team finding them in 15 minutes is realistic. A journalist or regulator finding them would take longer, but they would find them.", hook:"Microsoft's AI Red Team found vulnerabilities in 100% of LLM agent products tested. Not a subset. All of them. Automated testing missed them. Human red-teamers found them.", interaction:"In the chat: type the stage number where your product would fail first." }},
+  { id:15, phase:3, phaseLabel:"Phase 3: The Application", title:"ACTIVITY: Red-Team Sprint", subtitle:"HOMEWORK, in pairs or threes. Send your brief through Ask the Mentor.", accent:"#EA580C", activity:true, visual:"slide15", selfPaced:"Homework, in pairs or threes. Red-team the chatbot described here: write two real prompt-injection strings, rate each finding, and send your two-paragraph brief through Ask the Mentor. Every one gets read.",
+    notes:{ core:"WORKSHOP. Same scenario as the animation on the previous slide but now your team is the red team. You have a specific target - a financial services LLM chatbot - and a specific deliverable: a 2-minute vulnerability brief at the end, formatted like a real red team report. Groups of 4-5. Timer on screen. This is how Microsoft runs it. This is how real red teams operate.", hook:"", interaction:"" }},
   { id:16, phase:3, phaseLabel:"Phase 3: The Application", title:"Implementation Roadmap", subtitle:"Click each milestone. These are not suggestions. They are sequenced steps.", accent:"#2563EB", visual:"slide16",
-    notes:{ core:"Sequence matters. You cannot run a bias audit (Day 60 task) if you do not know which systems to audit (Day 30 task). You cannot automate fairness testing (Month 4 task) if you have no process for what happens when a test fails (Day 90 task). Teams that skip the foundation sprint and go straight to tools end up with expensive tools that nobody uses. Do the unglamorous work first.", hook:"PwC 2024: organisations with formal AI governance programs resolved AI-related incidents 60% faster and had 40% fewer of them. The governance investment pays for itself in incident costs alone.", interaction:"'What is the one task on the Day 1-30 list that your organisation has not done?' That is your first action item. Write it down before you leave this room." }},
-  { id:17, phase:3, phaseLabel:"Phase 3: The Application", title:"Ethics by Design Checklist", subtitle:"Click each item as you check it. What score would your latest model get?", accent:"#2563EB", visual:"slide17",
-    notes:{ core:"This is a pre-deployment gate. It is not a long document. It is 10 yes or no questions. If the answer to any is 'we are not sure' or 'we have not done this', that is a stop signal. The checklist does not tell you whether to ship. It tells you whether you know enough to make that decision responsibly.", hook:"Alan Turing Institute 2024: organisations using pre-deployment ethics checklists had 47% fewer post-deployment AI incidents. Not 5%. 47%.", interaction:"'Score your most recent AI deployment right now, honestly, against these 10 items. What did you get? Who would be responsible for the items you got wrong?'" }},
-  { id:18, phase:3, phaseLabel:"Phase 3: The Application", title:"The Future State", subtitle:"This is where the market is going. Where are you positioned?", accent:"#2563EB", visual:"slide18",
-    notes:{ core:"The four convergences are not predictions. They are already happening. The India AI Summit declaration is being written today. The EU AI Act fines can start landing in August 2025. The CAIO role is being created at companies right now. The question for everyone in this room is not 'will this happen?' It is 'am I going to be the person governing it or the person being governed by it?'", hook:"LinkedIn 2024 Jobs Report: AI governance role postings grew 214% year-over-year. These jobs pay senior engineering salaries. They require exactly the combination of technical depth and policy understanding that this programme develops.", interaction:"'In 5 years, your job title includes the word AI. What version of that title reflects you building expertise in governance? What version reflects you ignoring it?'" }},
-  { id:19, phase:3, phaseLabel:"Phase 3: The Application", title:"Your Responsible AI Stack", subtitle:"Click any tool to go directly to its documentation. All open source. Start tomorrow.", accent:"#2563EB", visual:"slide19",
-    notes:{ core:"Every tool on this slide is free, open source, and production-ready. There is no budget excuse for not using them. The IBM AIF360 documentation has worked examples for hiring, credit scoring, and recidivism - the three most common high-risk domains. Install it this week. Run it on your next model. Put the output in your model card.", hook:"HuggingFace 2024: 89% of enterprise ML teams use at least one of these tools. Only 23% have it integrated into their CI/CD pipeline. The gap between 'we have the tool' and 'we enforce it at deployment time' is where incidents happen.", interaction:"Which category of tools does your team have zero coverage for? That is your first procurement or implementation priority. Point at the screen. Pick one tool. Name the team member who will install it next week." }},
-  { id:20, phase:3, phaseLabel:"Phase 3: The Application", title:"The Oath of the Responsible Engineer", subtitle:"Say it out loud. Mean it. Then go do the work.", accent:"#2563EB", visual:"slide20",
-    notes:{ core:"End with silence. Read the oath. Give the room 60 seconds of actual quiet. This session covered regulatory frameworks, technical tools, governance maturity models, and hands-on exercises. But none of it matters if engineers leave and go back to shipping systems they cannot explain, with data they cannot trace, owned by nobody. The oath is not performative. It is a reminder that every decision has a human on the other end of it.", hook:"Mrinank Sharma's final act at Anthropic was publishing safety research showing AI assistants make us 'less human or distort our humanity.' That was his last contribution before he resigned saying 'the world is in peril.' Take that seriously.", interaction:"FINAL QUESTION - no hands, no discussion, just internal reflection: What is ONE thing you will do differently in your next project because of what you heard today? Give 60 seconds of silence. Then open Q and A. The silence is intentional." }},
+    notes:{ core:"Sequence matters. You cannot run a bias audit (Day 60 task) if you do not know which systems to audit (Day 30 task). You cannot automate fairness testing (Month 4 task) if you have no process for what happens when a test fails (Day 90 task). Teams that skip the foundation sprint and go straight to tools end up with expensive tools that nobody uses. Do the unglamorous work first.", hook:"PwC 2024: organisations with formal AI governance programs resolved AI-related incidents 60% faster and had 40% fewer of them. The governance investment pays for itself in incident costs alone.", interaction:"'What is the one task on the Day 1-30 list that your organisation has not done?' That is your first action item. Type it in the chat before this session ends." }},
+  { id:17, phase:3, phaseLabel:"Phase 3: The Application", title:"Ethics by Design Checklist", subtitle:"Click each item as you check it. What score would your latest model get?", accent:"#2563EB", visual:"slide17", selfPaced:"Pick the most important AI system you work on and tick each item honestly. Any unticked item is a risk you are choosing to carry into production. Ten out of ten is the entry ticket, not the finish line.",
+    notes:{ core:"This is a pre-deployment gate. It is not a long document. It is 10 yes or no questions. If the answer to any is 'we are not sure' or 'we have not done this', that is a stop signal. The checklist does not tell you whether to ship. It tells you whether you know enough to make that decision responsibly.", hook:"", interaction:"" }},
+  { id:18, phase:3, phaseLabel:"Phase 3: The Application", title:"The Future State", subtitle:"This is where the market is going. Where are you positioned?", accent:"#2563EB", visual:"slide18", selfPaced:"Thinking about a career in AI governance? This is where the roles and the demand are heading. Pair it with the IAPP AIGP certification and the NIST AI Risk Management Framework as your starting points.",
+    notes:{ core:"The four convergences are not predictions. They are already happening. The India AI Summit declaration is being written today. The EU AI Act fines can start landing in August 2025. The CAIO role is being created at companies right now. The question for everyone in this room is not 'will this happen?' It is 'am I going to be the person governing it or the person being governed by it?'", hook:"", interaction:"" }},
+  { id:19, phase:3, phaseLabel:"Phase 3: The Application", title:"Your Responsible AI Stack", subtitle:"Click any tool to go directly to its documentation. All open source. Start tomorrow.", accent:"#2563EB", visual:"slide19", selfPaced:"Every tool here is free and open source, and every name links to its documentation. Pick one this week. Building with LLMs? Start with Garak. Building classifiers? Start with Fairlearn.",
+    notes:{ core:"Every tool on this slide is free, open source, and production-ready. There is no budget excuse for not using them. The IBM AIF360 documentation has worked examples for hiring, credit scoring, and recidivism - the three most common high-risk domains. Install it this week. Run it on your next model. Put the output in your model card.", hook:"", interaction:"" }},
+  { id:20, phase:3, phaseLabel:"Phase 3: The Application", title:"The Oath of the Responsible Engineer", subtitle:"Six checks before you ship. Then your questions.", accent:"#2563EB", visual:"slide20",
+    notes:{ core:"End with silence. Read the oath. Give the room 60 seconds of actual quiet. This session covered regulatory frameworks, technical tools, governance maturity models, and hands-on exercises. But none of it matters if engineers leave and go back to shipping systems they cannot explain, with data they cannot trace, owned by nobody. The oath is not performative. It is a reminder that every decision has a human on the other end of it.", hook:"", interaction:"" }},
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1938,6 +2274,7 @@ function SurveyModal({ onClose, onSubmit }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function SlideVisual({ type }) {
   const map = {
+    slide0: <WelcomeVisual />,
     slide1: <Slide1Visual />,
     slide1a: <ParableVisual />,
     slide1b: <RevealVisual />,
@@ -1948,8 +2285,8 @@ function SlideVisual({ type }) {
     slide5: <Slide5Visual />,
     slide6: <Slide6Visual />,
     slide7: <Slide7Visual />,
-    slide8: <Slide8Visual />,
-    slide9: <Slide9Visual />,
+    slide8: <BiasAuditVisual />,
+    slide9: <PrivacyAttackVisual />,
     slide10: <Slide10Visual />,
     slide11: <Slide11Visual />,
     slide11b: <Slide11bVisual />,
@@ -1976,6 +2313,8 @@ export default function PresentationViewer() {
   const [visitedSlides, setVisitedSlides] = useState(() => new Set([0]));
   const [showSurvey, setShowSurvey] = useState(false);
   const [surveyDismissed, setSurveyDismissed] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
+  const PRESENTER = (() => { try { return new URLSearchParams(window.location.search).has("presenter"); } catch { return false; } })();
 
   const SURVEY_THRESHOLD = 6; // 30% of 20 slides
 
@@ -1990,7 +2329,8 @@ export default function PresentationViewer() {
 
   // Smart survey trigger: first visit, new pattern, or periodic re-survey
   useEffect(() => {
-    if (surveyDismissed || showSurvey) return;
+    if (surveyDismissed || showSurvey || PRESENTER || askOpen) return;
+    if (current !== slides.length - 1) return; // only at the end, never mid-session
     if (visitedSlides.size < SURVEY_THRESHOLD) return;
 
     let prev = null;
@@ -2007,7 +2347,7 @@ export default function PresentationViewer() {
     const lastPattern = prev.pattern || [];
     const newSlides = currentPattern.filter(s => !lastPattern.includes(s));
     if (newSlides.length >= SURVEY_PATTERN_DIFF_THRESHOLD) { setShowSurvey(true); return; }
-  }, [visitedSlides.size, surveyDismissed, showSurvey]);
+  }, [visitedSlides.size, surveyDismissed, showSurvey, current, askOpen]);
 
   const handleSurveySubmit = (data) => {
     // Save submission time + current browsing pattern
@@ -2079,6 +2419,7 @@ export default function PresentationViewer() {
           <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: isActivity ? "#fdba74" : "#64748b", flexShrink: 0 }}>{slide.subtitle}</p>
           <div style={{ height: 1, margin: "6px 0", background: `linear-gradient(to right,${borderColor},transparent)`, flexShrink: 0 }} />
           <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column" }}><SlideVisual type={slide.visual} /></div>
+          {slide.selfPaced && <SelfPacedStrip text={slide.selfPaced} />}
           {/* Hook Data + Interaction Strip */}
           {(slide.notes.hook || slide.notes.interaction) && (
             <div style={{ flexShrink: 0, display: "flex", gap: 8, marginTop: 6 }}>
@@ -2117,6 +2458,9 @@ export default function PresentationViewer() {
           Next <Icons.ChevronRight s={15} c={current === slides.length - 1 ? "#374151" : "#93c5fd"} />
         </button>
       </div>
+
+      {!askOpen && !showSurvey && <AskMentorButton onClick={() => setAskOpen(true)} />}
+      {askOpen && <AskMentorModal slideIndex={current} slideTotal={slides.length} slide={slide} onClose={() => setAskOpen(false)} />}
 
     </div>
   );
