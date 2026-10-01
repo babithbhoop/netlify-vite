@@ -128,17 +128,25 @@ const PARABLE_ACTS = [
 ];
 const ACT_FOR_STAGE = [0, 0, 1, 1, 1, 2, 2];
 
-function PuppetScene({ stage }) {
+function PuppetScene({ stage, caption, accent }) {
   const act = ACT_FOR_STAGE[stage];
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", background: "#1a120d" }}>
       {PARABLE_ACTS.map((a, i) => (
-        <img key={i} src={a.src} alt={a.alt} draggable={false}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
-                   opacity: i === act ? 1 : 0, transition: "opacity 1.1s ease",
-                   transform: i === act ? "scale(1.0)" : "scale(1.04)" }} />
+        <div key={i} style={{ position: "absolute", inset: 0, opacity: i === act ? 1 : 0, transition: "opacity 1.1s ease" }}>
+          {/* blurred, darkened copy fills the frame so nothing is cropped and there are no dead bars */}
+          <img src={a.src} alt="" aria-hidden="true" draggable={false}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                     filter: "blur(22px) brightness(0.45) saturate(1.2)", transform: "scale(1.15)" }} />
+          {/* the real scene, whole and uncropped */}
+          <img src={a.src} alt={a.alt} draggable={false}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
       ))}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,6,3,0.55) 0%, rgba(10,6,3,0) 40%)", pointerEvents: "none" }} />
+      {/* subtitle band */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "26px 16px 10px", background: "linear-gradient(to top, rgba(8,5,3,0.92) 0%, rgba(8,5,3,0.75) 55%, rgba(8,5,3,0) 100%)", pointerEvents: "none" }}>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#f5f0e8", textAlign: "center", textShadow: "0 1px 2px rgba(0,0,0,0.8)", fontFamily: "'Playfair Display', serif" }}>{caption}</p>
+      </div>
     </div>
   );
 }
@@ -168,14 +176,10 @@ function ParableVisual() {
 
   return (
     <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ flex: 1, position: "relative", borderRadius: 14, border: `1px solid ${danger ? "#ef444460" : outsider ? "#10b98150" : "#1e3a5f"}`, background: "#1a120d", overflow: "hidden", minHeight: 170 }}>
-        <PuppetScene stage={stage} />
-        <span style={{ position: "absolute", top: 8, left: 10, fontSize: 9, fontWeight: 900, letterSpacing: 2, color: danger ? "#f97316" : outsider ? "#10b981" : "#475569", fontFamily: "'DM Mono', monospace" }}>{stages[stage].label}</span>
-        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 9, color: "#334155", fontFamily: "'DM Mono', monospace" }}>{stage + 1} / {stages.length}</span>
-      </div>
-
-      <div style={{ borderRadius: 10, padding: "10px 14px", border: `1px solid ${danger ? "#f9731640" : "#1e293b"}`, background: danger ? "#f9731608" : "#0f172a", minHeight: 50, display: "flex", alignItems: "center" }}>
-        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "#e2e8f0" }}>{stages[stage].text}</p>
+      <div style={{ flex: 1, position: "relative", borderRadius: 14, border: `1px solid ${danger ? "#ef444460" : outsider ? "#10b98150" : "#1e3a5f"}`, background: "#1a120d", overflow: "hidden", minHeight: 220 }}>
+        <PuppetScene stage={stage} caption={stages[stage].text} />
+        <span style={{ position: "absolute", top: 8, left: 10, fontSize: 9, fontWeight: 900, letterSpacing: 2, color: danger ? "#fb923c" : outsider ? "#34d399" : "#cbd5e1", fontFamily: "'DM Mono', monospace", textShadow: "0 1px 3px rgba(0,0,0,0.9)", background: "rgba(8,5,3,0.55)", padding: "3px 7px", borderRadius: 5 }}>{stages[stage].label}</span>
+        <span style={{ position: "absolute", top: 8, right: 10, fontSize: 9, color: "#cbd5e1", fontFamily: "'DM Mono', monospace", textShadow: "0 1px 3px rgba(0,0,0,0.9)", background: "rgba(8,5,3,0.55)", padding: "3px 7px", borderRadius: 5 }}>{stage + 1} / {stages.length}</span>
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
