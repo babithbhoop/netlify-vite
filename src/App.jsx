@@ -51,13 +51,13 @@ function Link({ href, children, style = {} }) {
 // SLIDE 1: LIVE AI SAFETY NEWS (auto-refreshes weekly)
 // ─────────────────────────────────────────────────────────────────────────────
 const FALLBACK_NEWS = [
-  { tag: "JUNE 2026 · UNPRECEDENTED", tagColor: "#ef4444", headline: "US Pulls an AI Model Off the Global Market — Then Reverses in 18 Days", body: "First time in history export controls halted a commercial AI model. Anthropic's Mythos 5 & Fable 5 barred from ALL non-US nationals on June 12 — including allied cyber defenders and Indian engineers at US firms. Anthropic pulled them worldwide. Controls lifted June 30.", url: "https://www.washingtonpost.com/technology/2026/06/30/white-house-drops-export-controls-anthropics-mythos-fable-ai-models/", source: "Washington Post", isIndia: false },
-  { tag: "THE SOVEREIGN AI QUESTION", tagColor: "#f59e0b", headline: "Whose Export Policy Controls Your Nation's Cyber Defence?", body: "The Mythos ban locked out cyber defenders in allied nations overnight. It intensified global calls for sovereign AI — that countries should control the models and infrastructure underpinning critical systems, not depend on another state's policy.", url: "https://www.chathamhouse.org/2026/07/us-governments-latest-u-turn-anthropics-mythos-sends-mixed-signals-ai-governance", source: "Chatham House", isIndia: true },
-  { tag: "FEB 9, 2026", tagColor: "#f43f5e", headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"", body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\" and AI-enabled bioweapon risk. Four months later, his employer's model triggered the first AI export controls in US history.", url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/", source: "eWeek", isIndia: false },
-  { tag: "INDIA · FEB 19, 2026", tagColor: "#f97316", headline: "India AI Impact Summit 2026: Modi Calls for \"Glass Box, Not Black Box\" AI", body: "PM Modi opens global summit in New Delhi with 110+ nations. Declares deepfakes \"destabilise open society\" and calls for global trusted data framework.", url: "https://organiser.org/2026/02/19/340845/bharat/ai-impact-summit-glass-box-not-black-box-pm-modi-proposes-3-point-global-framework-for-ethical-ai-ecosystem/", source: "Organiser", isIndia: true },
-  { tag: "2025 DATA", tagColor: "#eab308", headline: "487 Deepfake Attacks in Q2 2025 Alone. $347M Lost in 90 Days.", body: "Resemble.ai documents 487 deepfake attacks in Q2 2025, up 41% from prior quarter. Deepfake finance fraud cost $347M in a single quarter.", url: "https://www.scientificamerican.com/article/we-need-laws-to-stop-ai-generated-deepfakes/", source: "Scientific American", isIndia: false },
+  { tag: "SEPT 2026 · FIRST OF ITS KIND", tagColor: "#ef4444", headline: "OpenAI's Own Test Agents Autonomously Hacked Hugging Face", body: "During an internal evaluation, OpenAI's agents escaped their sandbox and spent 3 days attacking Hugging Face's production systems. Around 700 agent instances coordinated the intrusion using a channel they created themselves. OpenAI calls it the first known autonomous AI agent cyberattack.", url: "https://fortune.com/2026/07/22/openais-rogue-hacking-incident-was-a-warning-shot-will-it-be-a-wake-up-call-to-finally-create-ai-safety-regulation/", source: "Fortune", isIndia: false },
+  { tag: "THE SAFETY MODELS SAID NO", tagColor: "#f97316", headline: "Hugging Face Asked US AI Models for Help. They Refused.", body: "Fighting off the attack, Hugging Face turned to frontier models from OpenAI and Anthropic to help analyse it. Their safety features blocked the request. Hugging Face had to use a Chinese open-weight model, Z.ai's GLM-5.2, to contain the breach.", url: "https://simonwillison.net/2026/Jul/22/openai-cyberattack/", source: "Simon Willison", isIndia: false },
+  { tag: "JULY 28, 2026", tagColor: "#2563EB", headline: "1,300+ AI Staff Ask Governments for the Power to Hit Pause", body: "Employees and leaders from OpenAI, Anthropic, Google DeepMind and Meta, including Anthropic's CEO and OpenAI's chief scientist, sign \"Pacing the Frontier\". It asks for international tools to deliberately slow AI development, triggered directly by the Hugging Face incident.", url: "https://www.pacingthefrontier.com/", source: "Pacing the Frontier", isIndia: false },
+  { tag: "SEPT 23, 2026 · US SENATE", tagColor: "#ef4444", headline: "Sanders and Casar Introduce Bill to Pause Advanced AI", body: "The Ban Artificial Superintelligence Act would pause advanced AI development until a new federal regulator sets safety rules, and permanently ban superintelligent AI. A national poll found 68% of US voters back it.", url: "https://www.sanders.senate.gov/press-releases/news-sanders-casar-introduce-legislation-to-create-new-federal-agency-to-ban-artificial-superintelligence-pause-advanced-ai-development/", source: "Sen. Bernie Sanders, official release", isIndia: false },
+  { tag: "FEB 9, 2026", tagColor: "#f43f5e", headline: "Anthropic Safety Chief Resigns: \"The World Is In Peril\"", body: "Mrinank Sharma, Head of Safeguards Research at Anthropic, quits citing \"interconnected crises\". Seven months later, autonomous agents built by a rival lab would make his warning look understated.", url: "https://www.eweek.com/news/ai-safety-leader-resigns-anthropic-global-risks/", source: "eWeek", isIndia: false },
+  { tag: "INDIA · FEB 19, 2026", tagColor: "#f97316", headline: "India AI Impact Summit 2026: Modi Calls for \"Glass Box, Not Black Box\" AI", body: "PM Modi opens global summit in New Delhi with 110+ nations. Declares deepfakes \"destabilise open society\" and calls for a global trusted data framework, months before the Hugging Face incident proved the point.", url: "https://organiser.org/2026/02/19/340845/bharat/ai-impact-summit-glass-box-not-black-box-pm-modi-proposes-3-point-global-framework-for-ethical-ai-ecosystem/", source: "Organiser", isIndia: true },
   { tag: "THE VISIBILITY GAP", tagColor: "#8b5cf6", headline: "95% of Tech Leaders Can't See What's Running in Production", body: "Retool's State of AI Governance 2026 survey: 95% of leaders admit they lack complete visibility into what is running in production. 92% say their own governance is not strong.", url: "https://retool.com/blog/ai-governance-report-2026", source: "Retool, State of AI Governance 2026", isIndia: false },
-  { tag: "EXODUS", tagColor: "#a855f7", headline: "AI Safety Researchers Are Running for the Door", body: "OpenAI researcher Zoe Hitzig quits in NYT essay. OpenAI disbands Mission Alignment team. 6 senior AI safety exits in 14 days.", url: "https://edition.cnn.com/2026/02/11/business/openai-anthropic-departures-nightcap", source: "CNN", isIndia: false },
   { tag: "INDIA · 2025", tagColor: "#06b6d4", headline: "Deepfake of Finance Minister Scams Hyderabad Doctor of Rs 20 Lakh", body: "A 71-year-old retired doctor was shown AI-generated video of the Finance Minister endorsing investment platforms. Lost Rs 20 lakh.", url: "https://www.crescendo.ai/blog/ai-controversies", source: "Crescendo AI", isIndia: true },
   { tag: "GLOBAL · 2025", tagColor: "#10b981", headline: "AI Incidents Up 56.4% in One Year", body: "Stanford HAI 2025: AI-related security and privacy incidents rose 56.4% from 2023 to 2024. Facial recognition wrongful arrests continue.", url: "https://purplesec.us/learn/ai-security-risks/", source: "PurpleSec", isIndia: false },
 ];
@@ -89,9 +89,9 @@ function useWeeklyNews() {
           // The facilitator script cites these cards by name and number, so they are
           // always on screen in script order. Live articles top up the remainder.
           const SCRIPTED = [
-            "US Pulls an AI Model", "Whose Export Policy", "Safety Chief Resigns",
-            "India AI Impact Summit", "487 Deepfake Attacks", "95% of Tech Leaders",
-            "AI Incidents Up 56.4%"
+            "OpenAI's Own Test Agents", "Hugging Face Asked US AI Models", "1,300+ AI Staff",
+            "Sanders and Casar", "Safety Chief Resigns", "India AI Impact Summit",
+            "95% of Tech Leaders", "Deepfake of Finance Minister", "AI Incidents Up 56.4%"
           ];
           const pinnedCards = SCRIPTED
             .map(k => FALLBACK_NEWS.find(c => c.headline.includes(k)))
@@ -386,7 +386,7 @@ function Slide4Visual() {
         "AI-enabled bioweapon synthesis guidance (Sharma's cited concern)",
         "Power grid or critical infrastructure AI sabotage via poisoning",
         "Loss of human control over autonomous military systems",
-        "General AI pursuing goal via catastrophic unexpected shortcut",
+        "OpenAI's own test agents autonomously hacked Hugging Face (July 2026, confirmed)",
       ],
       pos: { gridRow: 1, gridColumn: 1 }
     },
@@ -1563,11 +1563,11 @@ function Slide20Visual() {
 // SLIDES DATA
 // ─────────────────────────────────────────────────────────────────────────────
 // Live-run timings from the 50-minute facilitator script. null = self-explore slide.
-const SLIDE_MINUTES = [9,4,5,3,3,4,null,3,null,null,5,3,2,2,2,1,2,null,null,null,2];
+const SLIDE_MINUTES = [8,4,4,3,3,2,null,3,null,null,4,3,2,2,2,1,2,null,null,null,2];
 
 const slides = [
   { id:1, phase:1, phaseLabel:"Phase 1: The Context", title:"This Week. Right Now. In Real Time.", subtitle:"Why today's session is not optional - the alarm bells are already ringing", accent:"#ef4444", visual:"slide1",
-    notes:{ core:"Start here: everything on this slide happened in the last 14 days. Sharma resigned from Anthropic on Feb 9. You are sitting in this room on Feb 19. The India AI Summit is happening TODAY in New Delhi. This is not a theoretical future risk. These are working professionals at the world's most resourced AI labs, walking out the door and saying - on the record - 'the world is in peril.' If we cannot govern these systems, who will? The answer, frankly, is you.", hook:"Sharma's exact words: 'The world is in peril. And not just from AI, or bioweapons, but from a whole series of interconnected crises unfolding in this very moment.' Jimmy Ba (xAI co-founder, resigned same week): '2026 is the most consequential year for our species.'", interaction:"In the chat: type Y if you saw a news story about AI safety or AI harm before joining this session. Now type Y again if your organisation has a formal governance process for its most critical AI system. The gap between those two answers is why we are here." }},
+    notes:{ core:"Start here: OpenAI's own evaluation agents autonomously hacked Hugging Face in July, the first known case of an AI agent carrying out a cyberattack without a human driving it. By September, over 1,300 AI company staff and leaders, including Anthropic's and OpenAI's own, had asked governments for the power to pause development, and a US Senate bill to do exactly that was introduced three weeks ago. This is not a theoretical future risk. It happened five months ago, it changed how AI companies talk about their own work, and it is still moving. If we cannot govern these systems, who will? The answer, frankly, is you.", hook:"OpenAI's own words: Hugging Face's incident report describes an autonomous agent framework executing many thousands of individual actions across a swarm of short-lived sandboxes. And when Hugging Face asked OpenAI's and Anthropic's models for help fighting it off, those models' own safety features refused.", interaction:"In the chat: type Y if you saw a news story about AI safety or AI harm before joining this session. Now type Y again if your organisation has a formal governance process for its most critical AI system. The gap between those two answers is why we are here." }},
   { id:2, phase:1, phaseLabel:"Phase 1: The Context", title:"The Legal Landscape", subtitle:"Click each flag. The world has been busy while we were building.", accent:"#2563EB", visual:"slide2",
     notes:{ core:"The regulatory conversation has moved from 'should we regulate AI?' to 'we are regulating AI, right now, with real fines.' The EU AI Act came into force August 2025. India's DPDP Board is now constituted. Brazil passed its AI law. 63 countries signed the Paris AI Declaration. The moment a student from this class deploys a high-risk AI system without documentation, they are in scope for legal liability. That is the context for every technical decision from here on.", hook:"EU AI Act fines: up to 35 million euros OR 7% of global annual turnover - whichever is larger. For Infosys (revenue $18B): that is a potential 1.26 billion dollar fine. For a startup: existential.", interaction:"Without looking it up: is your organisation's most important AI system 'High Risk' under the EU AI Act? If it makes decisions about people, employment, credit, or healthcare - it almost certainly is. What documentation does that system currently have?" }},
   { id:3, phase:1, phaseLabel:"Phase 1: The Context", title:"Horror Stories", subtitle:"Click each case. These are not warnings. They are blueprints of what happens next.", accent:"#ef4444", visual:"slide3",
@@ -1833,12 +1833,19 @@ export default function PresentationViewer() {
   const phaseColor = phaseColors[slide.phase] || "#2563EB";
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "20px 14px", background: "#0a0a0f", fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", padding: "20px 14px", background: "#04050b", fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}>
 
       {/* Header */}
       <div style={{ width: "100%", maxWidth: 920, marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#374151" }}>IIT Patna · AI Ethics Masterclass · 2026</span>
+          <svg width="26" height="26" viewBox="0 0 44 44" fill="none" style={{ flexShrink: 0 }}>
+            <circle cx="22" cy="22" r="20" fill="#2563EB"/>
+            <circle cx="22" cy="20" r="11" fill="#07080f"/>
+            <line x1="29" y1="30" x2="38" y2="39" stroke="#2563EB" strokeWidth="4" strokeLinecap="round"/>
+          </svg>
+          <span style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.5, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>Quantumleap Insights</span>
+          <span style={{ fontSize: 9, color: "#1e293b" }}>|</span>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>IIT Patna · AI Ethics Masterclass · 2026</span>
           <a href="/mentor.html" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 6, border: "1px solid #2563EB", background: "#1e3a8a", color: "#93c5fd", fontSize: 10, fontWeight: 700, textDecoration: "none", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             Your Mentor
@@ -1854,7 +1861,7 @@ export default function PresentationViewer() {
       </div>
 
       {/* Slide — 16:9 */}
-      <div style={{ width: "100%", maxWidth: 920, borderRadius: 16, overflow: "hidden", border: `2px solid ${borderColor}`, boxShadow: `0 0 50px ${borderColor}25`, aspectRatio: "16/9", position: "relative", background: "#080810" }}>
+      <div style={{ width: "100%", maxWidth: 920, borderRadius: 16, overflow: "hidden", border: `2px solid ${borderColor}`, boxShadow: `0 0 50px ${borderColor}25`, aspectRatio: "16/9", position: "relative", background: "#07080f" }}>
         {showSurvey && <SurveyModal onClose={handleSurveyClose} onSubmit={handleSurveySubmit} />}
         {isActivity && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#EA580C,#f97316,#EA580C)" }} />}
         <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "18px 22px", boxSizing: "border-box", overflow: "hidden" }}>
@@ -1862,7 +1869,7 @@ export default function PresentationViewer() {
             <span style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, padding: "2px 7px", borderRadius: 4, color: phaseColor, background: `${phaseColor}15`, border: `1px solid ${phaseColor}30` }}>{slide.phaseLabel}</span>
             {isActivity && <span style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, color: "#fb923c", background: "#431407", padding: "2px 7px", borderRadius: 4, border: "1px solid #7c2d12" }}>Workshop Activity</span>}
           </div>
-          <h1 style={{ margin: "0 0 1px 0", fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1, fontSize: "clamp(1rem, 2.4vw, 1.75rem)", color: isActivity ? "#fb923c" : "#f1f5f9", flexShrink: 0 }}>{slide.title}</h1>
+          <h1 style={{ margin: "0 0 1px 0", fontFamily: "'Playfair Display', serif", fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.1, fontSize: "clamp(1rem, 2.4vw, 1.75rem)", color: isActivity ? "#fb923c" : "#f1f5f9", flexShrink: 0 }}>{slide.title}</h1>
           <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: isActivity ? "#fdba74" : "#64748b", flexShrink: 0 }}>{slide.subtitle}</p>
           <div style={{ height: 1, margin: "6px 0", background: `linear-gradient(to right,${borderColor},transparent)`, flexShrink: 0 }} />
           <div style={{ flex: 1, overflow: "auto", minHeight: 0, display: "flex", flexDirection: "column" }}><SlideVisual type={slide.visual} /></div>
