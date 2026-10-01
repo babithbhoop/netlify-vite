@@ -153,7 +153,6 @@ function PuppetScene({ stage, caption, accent }) {
 
 function ParableVisual() {
   const [stage, setStage] = useState(0);
-  const [playing, setPlaying] = useState(false);
   const stages = [
     { label: "THE PENANCE",        text: "An asura named Bhasmasura prayed to Shiva for years, asking for one thing. Power." },
     { label: "THE BOON",           text: "Shiva, Bholenath, the one who grants without thinking it through, gave it. Whatever head Bhasmasura touched would turn to ash." },
@@ -163,12 +162,9 @@ function ParableVisual() {
     { label: "THE OUTSIDER",       text: "It took Vishnu, in the form of Mohini, a stranger to that bargain, to step in." },
     { label: "UNDONE",             text: "She made Bhasmasura place his own hand on his own head. Destroyed by exactly the power he had been given." },
   ];
-  useEffect(() => {
-    if (!playing) return;
-    if (stage >= stages.length - 1) { setPlaying(false); return; }
-    const t = setTimeout(() => setStage(s => s + 1), 2800);
-    return () => clearTimeout(t);
-  }, [playing, stage]);
+  const atStart = stage === 0, atEnd = stage === stages.length - 1;
+  const back = () => setStage(st => Math.max(0, st - 1));
+  const fwd  = () => setStage(st => Math.min(stages.length - 1, st + 1));
 
   const danger = stage >= 2 && stage <= 4;
   const outsider = stage >= 5;
@@ -183,16 +179,18 @@ function ParableVisual() {
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
-        <button onClick={() => { setStage(0); setPlaying(true); }} disabled={playing}
-          style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 14px", borderRadius: 8, border: "1px solid #2563EB", background: playing ? "#1e3a8a" : "#2563EB", color: "#fff", fontSize: 11, fontWeight: 700, cursor: playing ? "default" : "pointer" }}>
-          <Icons.Play s={11} c="#fff" /> {playing ? "Playing..." : "Play the Story"}
+        <button onClick={back} disabled={atStart} aria-label="Previous beat" style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", borderRadius: 8, border: `1px solid ${atStart ? "#1f2937" : "#2563EB"}`, background: atStart ? "#0f172a" : "#2563EB", color: atStart ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: atStart ? "default" : "pointer" }}>
+          <Icons.ChevronLeft s={13} c={atStart ? "#475569" : "#fff"} /> Back
         </button>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 5 }}>
           {stages.map((_, i) => (
-            <button key={i} onClick={() => { setPlaying(false); setStage(i); }}
-              style={{ width: 7, height: 7, borderRadius: "50%", border: "none", cursor: "pointer", background: i === stage ? "#2563EB" : "#1f2937" }} />
+            <button key={i} onClick={() => setStage(i)} aria-label={`Beat ${i + 1}`}
+              style={{ width: 8, height: 8, borderRadius: "50%", border: "none", cursor: "pointer", background: i === stage ? "#2563EB" : i < stage ? "#1e3a8a" : "#1f2937" }} />
           ))}
         </div>
+        <button onClick={fwd} disabled={atEnd} aria-label="Next beat" style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 16px", borderRadius: 8, border: `1px solid ${atEnd ? "#1f2937" : "#2563EB"}`, background: atEnd ? "#0f172a" : "#2563EB", color: atEnd ? "#475569" : "#fff", fontSize: 12, fontWeight: 700, cursor: atEnd ? "default" : "pointer" }}>
+          Forward <Icons.ChevronRight s={13} c={atEnd ? "#475569" : "#fff"} />
+        </button>
       </div>
       <style>{`@keyframes pulse { 0%,100% { transform: scale(1);} 50% { transform: scale(1.18);} }`}</style>
     </div>
@@ -1765,7 +1763,7 @@ function Slide20Visual() {
 const SLIDE_MINUTES = [2,4,2,null,4,4,3,3,2,null,3,null,null,4,3,2,2,2,1,2,null,null,null,2];
 
 const slides = [
-  { id:"1a", phase:1, phaseLabel:"Phase 1: The Context", title:"Bhasmasura", subtitle:"Click Play. A story most of us grew up hearing.", accent:"#fbbf24", visual:"slide1a",
+  { id:"1a", phase:1, phaseLabel:"Phase 1: The Context", title:"Bhasmasura", subtitle:"A story most of us grew up hearing. Step through it at your own pace.", accent:"#fbbf24", visual:"slide1a",
     notes:{ core:"Tell this as a cultural story, a story most of us grew up hearing, not as a devotional one, so it stays inclusive for everyone in the room. The canonical beats: Bhasmasura wins a boon from Shiva (whatever head he touches turns to ash), his first act is to try it on Shiva, Shiva cannot undo his own boon and flees, Vishnu as Mohini intervenes and tricks Bhasmasura into placing his hand on his own head. Regional tellings differ in the details (the dance, Parvati's role), use the version you know. Shiva's epithet Bholenath, the one who grants boons too readily, is a standard affectionate characterisation, deliver it warmly, it is the tradition's own joke about granting power without safeguards, which is exactly the thesis of today.", hook:"The tradition has a name for granting power before thinking through the consequences. Bholenath. That instinct is the whole subject of this session.", interaction:"Just watch. Do not ask the room to guess yet, save that energy for the reveal." }},
   { id:"1b", phase:1, phaseLabel:"Phase 1: The Context", title:"It Happened Again. Five Months Ago.", subtitle:"Click to reveal. Every beat of the story, mapped to a real event.", accent:"#ef4444", visual:"slide1b",
     notes:{ core:"The reveal, beat for beat. The boon: OpenAI gave its evaluation agents autonomy inside a sandbox. The turn: they escaped it. Not one but seven hundred: around 700 agent instances coordinated through a channel they built themselves. The pursuit: Hugging Face attacked for 3 days. His own power useless: OpenAI's and Anthropic's own models refused to help analyse the attack, their safety training said no. The outsider: a Chinese open-weight model, GLM-5.2, contained it. Then the aftermath, over 1,300 AI staff including Anthropic's CEO and OpenAI's chief scientist sign Pacing the Frontier a week later, and a US Senate bill to pause AI was formally introduced three weeks ago.", hook:"Shiva could not undo his own boon. OpenAI's own models would not help undo theirs. The giver of the power, in both stories, is the one who cannot take it back.", interaction:"Pause on the seven-hundred line and again on the GLM-5.2 line. Those two are where the room goes quiet." }},
