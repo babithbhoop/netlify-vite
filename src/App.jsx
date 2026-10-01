@@ -1760,7 +1760,7 @@ function Slide20Visual() {
 // SLIDES DATA
 // ─────────────────────────────────────────────────────────────────────────────
 // Live-run timings from the 50-minute facilitator script. null = self-explore slide.
-const SLIDE_MINUTES = [2,4,2,null,4,4,3,3,2,null,3,null,null,4,3,2,2,2,1,2,null,null,null,2];
+const SLIDE_MINUTES = [3,4,1,null,4,4,3,3,2,null,3,null,null,4,3,2,2,2,1,2,null,null,null,2];
 
 const slides = [
   { id:"1a", phase:1, phaseLabel:"Phase 1: The Context", title:"Bhasmasura", subtitle:"A story most of us grew up hearing. Step through it at your own pace.", accent:"#fbbf24", visual:"slide1a",
