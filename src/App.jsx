@@ -562,7 +562,7 @@ function laplace(b) { const u = Math.random() - 0.5; return -b * Math.sign(u) * 
 
 function PrivacyAttackVisual() {
   const [step, setStep] = useState(0);
-  const [eps, setEps] = useState(1);
+  const [eps, setEps] = useState(4);
   const [seed, setSeed] = useState(0);
   const noisy = useMemo(() => {
     const a40 = 7.82 + laplace((10 / 40) / eps);
@@ -597,7 +597,7 @@ function PrivacyAttackVisual() {
           </>
         ) : (
           <>
-            {card("PUBLISHED, WITH NOISE", noisy.a40.toFixed(2), `True average 7.82. Off by ${Math.abs(noisy.a40 - 7.82).toFixed(2)}, still useful.`, "#34d399")}
+            {card("PUBLISHED, WITH NOISE", noisy.a40.toFixed(2), `True average 7.82. Off by ${Math.abs(noisy.a40 - 7.82).toFixed(2)}. ${Math.abs(noisy.a40 - 7.82) <= 0.15 ? "Still useful." : "Getting less useful."}`, Math.abs(noisy.a40 - 7.82) <= 0.15 ? "#34d399" : "#f97316")}
             {card("ATTACKER'S GUESS FOR ADITI", noisy.guess.toFixed(2), `True CGPA 8.99. Off by ${Math.abs(noisy.guess - 8.99).toFixed(2)}. ${Math.abs(noisy.guess - 8.99) > 1 ? "The attack is useless." : "Weak protection at this setting."}`, Math.abs(noisy.guess - 8.99) > 1 ? "#34d399" : "#f97316")}
           </>
         )}
@@ -2120,7 +2120,7 @@ const slides = [
   { id:7, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Explainability", subtitle:"LIME. SHAP. Counterfactuals. Pick your weapon based on what you need to prove.", accent:"#2563EB", visual:"slide7", selfPaced:"Read the three cards. For each method, note one situation where you would use it. Start with SHAP: it gives every input a fair share of the credit for a decision, and its outputs hold up in regulatory submissions. Every link goes to the documentation.",
     notes:{ core:"The right explainability tool depends entirely on what question you are answering. If a regulator asks 'why was this specific loan denied?', counterfactuals are the only legally actionable format. If an engineer asks 'which features matter globally?', SHAP is the answer. If you need something fast during a demo, LIME. Most teams pick one and use it for everything. That is wrong.", hook:"", interaction:"" }},
   { id:8, phase:2, phaseLabel:"Phase 2: The Framework", title:"Bias Audit: The AI Exam Proctor", subtitle:"Five clicks. Headline, split, harm, cause, decision. That is the whole method.", accent:"#EA580C", activity:true, visual:"slide8",
-    notes:{ core:"Live walkthrough, five steps with Next step. Illustrative data: 1,000 students, 40 cheated. Broadband 600, mobile data 400. Overall 93.8% correct. Wrong flags on honest students: 2% broadband, 12% mobile data, so 46 of the 58 wrong accusations fall on the mobile-data group. Cause: freezes and audio drops read as looking away and another voice. Close on who signs off on the acceptable gap.", hook:"The model was never told anyone's internet connection. It worked it out anyway, from video freezes. That is what a proxy variable is.", interaction:"In the chat: type Y if you would sign off on this proctor at 94% accuracy. Then watch what the split shows." }},
+    notes:{ core:"Live walkthrough, five steps with Next step. Illustrative data: 1,000 students, 40 cheated. Broadband 600, mobile data 400. Overall 93.8% correct. Wrong flags on honest students: 2% broadband, 12% mobile data, so 46 of the 58 wrong accusations fall on the mobile-data group. Cause: freezes and audio drops read as looking away and another voice. Close on who signs off on the acceptable gap.", hook:"", interaction:"In the chat: type Y if you would sign off on this proctor at 94% accuracy. Then watch what the split shows." }},
   { id:9, phase:2, phaseLabel:"Phase 2: The Framework", title:"Differential Privacy: Steal a Classmate's CGPA", subtitle:"Two harmless averages, one subtraction. Then the fix.", accent:"#7c3aed", visual:"slide9",
     notes:{ core:"Live walkthrough, four steps. 40 students average 7.82, Aditi withdraws, 39 average 7.79, so Aditi = 40 x 7.82 - 39 x 7.79 = 8.99. Step 4 adds Laplace noise to each published average; drag towards More privacy and press Publish again to show the attack collapse while the average stays usable.", hook:"Apple uses differential privacy on keyboard data from your phone. The 2020 US Census used it to protect every household it counted.", interaction:"Before Step 3, try it in the chat: can you work out Aditi's CGPA from the two published averages?" }},
   { id:10, phase:2, phaseLabel:"Phase 2: The Framework", title:"The Bias Audit Pipeline", subtitle:"This is not a diagram. This is a job description. Click each stage.", accent:"#2563EB", visual:"slide10", selfPaced:"This is the audit from Slide 8, scaled up into how a real company runs it: six stages, six named people. Click each stage and ask yourself which of those six people actually exists in your organisation today.",
