@@ -117,6 +117,158 @@ function useWeeklyNews() {
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDE 1A: THE PARABLE (unnamed, animated, auto-plays once then click-to-replay)
 // ─────────────────────────────────────────────────────────────────────────────
+// ── Shadow-puppet figures (tholu bommalata style): silhouettes lit from behind ──
+function ShivaFigure({ x, y, fleeing, dimmed }) {
+  const glow = dimmed ? "#78716c" : "#60a5fa";
+  return (
+    <g transform={`translate(${x},${y})`} style={{ transition: "transform 0.9s ease" }}>
+      <defs>
+        <radialGradient id="shivaGlow" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor={glow} stopOpacity={dimmed ? 0.15 : 0.45} />
+          <stop offset="100%" stopColor={glow} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="0" cy="-8" rx="34" ry="40" fill="url(#shivaGlow)" />
+      {/* trishul */}
+      <line x1="30" y1="-48" x2="30" y2="30" stroke="#0a0a0a" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M22,-44 Q30,-56 38,-44" fill="none" stroke="#0a0a0a" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="30" y1="-56" x2="30" y2="-44" stroke="#0a0a0a" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="22" cy="-44" r="1.6" fill={glow} /><circle cx="30" cy="-56" r="1.6" fill={glow} /><circle cx="38" cy="-44" r="1.6" fill={glow} />
+      {/* crescent moon */}
+      <path d="M-10,-40 A9,9 0 1 1 -4,-26 A6,6 0 1 0 -10,-40 Z" fill={dimmed ? "#44403c" : "#dbeafe"} opacity="0.9" />
+      {/* seated body */}
+      <ellipse cx="0" cy="22" rx="20" ry="7" fill="#0a0a0a" />
+      <path d="M-14,22 Q-16,0 0,-4 Q16,0 14,22 Z" fill="#0a0a0a" />
+      {/* arms in meditation */}
+      <path d="M-13,6 Q-20,14 -12,20" fill="none" stroke="#0a0a0a" strokeWidth="4" strokeLinecap="round" />
+      <path d="M13,6 Q20,14 12,20" fill="none" stroke="#0a0a0a" strokeWidth="4" strokeLinecap="round" />
+      {/* serpent at neck */}
+      <path d="M-9,-6 Q-4,-12 2,-6 Q6,-2 10,-7" fill="none" stroke={dimmed ? "#44403c" : "#4ade80"} strokeWidth="1.6" strokeLinecap="round" />
+      {/* head + matted hair */}
+      <circle cx="0" cy="-18" r="10" fill="#0a0a0a" />
+      <path d="M-10,-22 Q-6,-34 0,-30 Q6,-34 10,-22" fill="#0a0a0a" />
+      {/* third eye */}
+      <ellipse cx="0" cy="-20" rx="2.2" ry="1.2" fill={dimmed ? "#78716c" : "#fef3c7"}>
+        {!dimmed && <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />}
+      </ellipse>
+      {fleeing && <text x="0" y="40" textAnchor="middle" fontSize="7" fill="#f97316" fontFamily="'DM Mono', monospace">flees</text>}
+    </g>
+  );
+}
+
+function BhasmasuraFigure({ x, y, powered, reaching, dissolving }) {
+  const hand = powered ? "#f97316" : "#334155";
+  return (
+    <g transform={`translate(${x},${y})`} style={{ transition: "transform 0.9s ease", opacity: dissolving ? 0.25 : 1 }}>
+      <defs>
+        <radialGradient id="handGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* legs */}
+      <path d="M-10,30 L-14,52 M10,30 L14,52" stroke="#0a0a0a" strokeWidth="6" strokeLinecap="round" />
+      {/* torso, broad */}
+      <path d="M-18,-4 Q-20,16 -12,30 L12,30 Q20,16 18,-4 Z" fill="#0a0a0a" />
+      {/* left arm down */}
+      <path d="M-16,2 Q-26,14 -20,26" fill="none" stroke="#0a0a0a" strokeWidth="5" strokeLinecap="round" />
+      {/* right arm: raised, reaching toward target when reaching, or to own head when dissolving */}
+      <path d={dissolving ? "M16,2 Q26,-18 6,-28" : reaching ? "M16,2 Q34,-6 46,-4" : "M16,2 Q30,-14 26,-30"}
+        fill="none" stroke="#0a0a0a" strokeWidth="5" strokeLinecap="round" style={{ transition: "d 0.9s ease" }} />
+      {/* the boon hand */}
+      {powered && (
+        <g>
+          <circle cx={dissolving ? 6 : reaching ? 46 : 26} cy={dissolving ? -28 : reaching ? -4 : -30} r="12" fill="url(#handGlow)" style={{ transition: "all 0.9s ease" }} />
+          <circle cx={dissolving ? 6 : reaching ? 46 : 26} cy={dissolving ? -28 : reaching ? -4 : -30} r="4" fill={hand} style={{ transition: "all 0.9s ease" }}>
+            <animate attributeName="r" values="4;5.5;4" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+        </g>
+      )}
+      {/* head with horns */}
+      <circle cx="0" cy="-16" r="11" fill="#0a0a0a" />
+      <path d="M-8,-24 L-12,-36 M8,-24 L12,-36" stroke="#0a0a0a" strokeWidth="4" strokeLinecap="round" />
+      {/* eyes */}
+      <circle cx="-4" cy="-17" r="1.3" fill={powered ? "#f97316" : "#64748b"} />
+      <circle cx="4" cy="-17" r="1.3" fill={powered ? "#f97316" : "#64748b"} />
+    </g>
+  );
+}
+
+function MohiniFigure({ x, y, visible }) {
+  return (
+    <g transform={`translate(${x},${y})`} style={{ transition: "all 1s ease", opacity: visible ? 1 : 0 }}>
+      <defs>
+        <radialGradient id="mohiniGlow" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="0" cy="0" rx="30" ry="42" fill="url(#mohiniGlow)" />
+      {/* flared skirt */}
+      <path d="M-6,8 Q-20,34 -16,44 L16,44 Q20,34 6,8 Z" fill="#0a0a0a" />
+      {/* torso in tribhanga */}
+      <path d="M-6,8 Q-9,-6 -2,-10 Q6,-6 6,8 Z" fill="#0a0a0a" />
+      {/* raised arm in mudra */}
+      <path d="M4,-6 Q16,-20 10,-30" fill="none" stroke="#0a0a0a" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="10" cy="-31" r="2.5" fill="#fbbf24" />
+      {/* other arm out */}
+      <path d="M-5,-4 Q-18,0 -22,10" fill="none" stroke="#0a0a0a" strokeWidth="3.5" strokeLinecap="round" />
+      {/* head */}
+      <circle cx="0" cy="-17" r="8" fill="#0a0a0a" />
+      <path d="M-8,-20 Q-10,-28 -4,-26 L4,-26 Q10,-28 8,-20" fill="#0a0a0a" />
+      {/* anklets */}
+      <circle cx="-13" cy="44" r="1.5" fill="#fbbf24" /><circle cx="13" cy="44" r="1.5" fill="#fbbf24" />
+    </g>
+  );
+}
+
+function AshParticles({ x, y, active }) {
+  if (!active) return null;
+  const parts = Array.from({ length: 14 });
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {parts.map((_, i) => (
+        <circle key={i} cx={(i % 7) * 7 - 21} cy={Math.floor(i / 7) * 8 - 10} r="1.4" fill="#94a3b8">
+          <animate attributeName="cy" from={Math.floor(i / 7) * 8 - 10} to={-40 - i * 2} dur={`${2 + (i % 4) * 0.5}s`} repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.9;0" dur={`${2 + (i % 4) * 0.5}s`} repeatCount="indefinite" />
+        </circle>
+      ))}
+    </g>
+  );
+}
+
+function PuppetScene({ stage }) {
+  // Stage choreography on a 320x130 stage
+  const shivaX    = [220, 220, 220, 262, 268, 262, 262][stage];
+  const asuraX    = [70,  70,  120, 170, 185, 150, 110][stage];
+  const powered   = stage >= 1;
+  const reaching  = stage === 2 || stage === 3;
+  const dimmed    = stage === 4;
+  const fleeing   = stage === 3;
+  const mohini    = stage >= 5;
+  const dissolving = stage === 6;
+  return (
+    <svg viewBox="0 0 320 130" style={{ width: "100%", height: "100%" }}>
+      <defs>
+        <radialGradient id="lamp" cx="50%" cy="110%" r="90%">
+          <stop offset="0%" stopColor="#9a3412" stopOpacity="0.85" />
+          <stop offset="45%" stopColor="#3f2a1d" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#1c1410" stopOpacity="0.6" />
+        </radialGradient>
+      </defs>
+      {/* lamp-lit screen */}
+      <rect width="320" height="130" fill="url(#lamp)" />
+      {/* ground line */}
+      <line x1="0" y1="112" x2="320" y2="112" stroke="#44403c" strokeWidth="0.6" />
+      {/* figures: order matters for overlap */}
+      <ShivaFigure x={shivaX} y={78} fleeing={fleeing} dimmed={dimmed} />
+      <AshParticles x={asuraX} y={60} active={dissolving} />
+      <BhasmasuraFigure x={asuraX} y={60} powered={powered && !dissolving} reaching={reaching} dissolving={dissolving} />
+      <MohiniFigure x={mohini ? 230 : 320} y={66} visible={mohini} />
+    </svg>
+  );
+}
+
 function ParableVisual() {
   const [stage, setStage] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -136,41 +288,14 @@ function ParableVisual() {
     return () => clearTimeout(t);
   }, [playing, stage]);
 
-  // positions: asura (left), giver (right), outsider (top)
-  const asuraX = [60, 60, 100, 120, 125, 110, 90][stage];
-  const giverX = [130, 130, 130, 150, 155, 150, 150][stage];
-  const asuraColor = ["#475569", "#2563EB", "#ef4444", "#ef4444", "#ef4444", "#ef4444", "#334155"][stage];
-  const giverColor = ["transparent", "#fbbf24", "#fbbf24", "#fbbf24", "#78716c", "#fbbf24", "#fbbf24"][stage];
-  const asuraGlow = [4, 18, 22, 22, 22, 18, 0][stage];
   const danger = stage >= 2 && stage <= 4;
   const outsider = stage >= 5;
   const undone = stage === 6;
 
   return (
     <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ flex: 1, position: "relative", borderRadius: 14, border: `1px solid ${danger ? "#ef444460" : outsider ? "#10b98150" : "#1e3a5f"}`, background: "linear-gradient(135deg,#0a0e1a 0%,#0d1420 100%)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 150 }}>
-        <div style={{ position: "relative", width: 200, height: 110 }}>
-          {/* pursuit line */}
-          {danger && stage >= 3 && (
-            <svg style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-              <line x1={asuraX} y1="60" x2={giverX - 10} y2="60" stroke="#ef444460" strokeWidth="2" strokeDasharray="4 4" />
-            </svg>
-          )}
-          {/* the asura */}
-          <div style={{ position: "absolute", left: asuraX - 9, top: 51, width: 18, height: 18, borderRadius: "50%", background: asuraColor, boxShadow: `0 0 ${asuraGlow}px ${asuraColor}`, transition: "all 0.8s ease", opacity: undone ? 0.4 : 1 }} />
-          {/* the giver */}
-          {stage >= 1 && (
-            <div style={{ position: "absolute", left: giverX - 9, top: 51, width: 18, height: 18, borderRadius: "50%", background: giverColor, boxShadow: `0 0 ${stage === 4 ? 2 : 14}px ${giverColor}`, transition: "all 0.8s ease", opacity: stage === 4 ? 0.5 : 1 }} />
-          )}
-          {/* the outsider, enters from above */}
-          {outsider && (
-            <div style={{ position: "absolute", left: 90 - 9, top: undone ? 51 : 10, width: 18, height: 18, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 16px #10b981", transition: "all 0.8s ease", animation: "pulse 1.6s ease-in-out infinite" }} />
-          )}
-          {/* ash */}
-          {undone && (
-            <div style={{ position: "absolute", left: asuraX - 20, top: 72, fontSize: 9, color: "#64748b", fontFamily: "'DM Mono', monospace", letterSpacing: 1 }}>bhasma</div>
-          )}
-        </div>
+      <div style={{ flex: 1, position: "relative", borderRadius: 14, border: `1px solid ${danger ? "#ef444460" : outsider ? "#10b98150" : "#1e3a5f"}`, background: "#1a120d", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 150 }}>
+        <PuppetScene stage={stage} />
         <span style={{ position: "absolute", top: 8, left: 10, fontSize: 9, fontWeight: 900, letterSpacing: 2, color: danger ? "#f97316" : outsider ? "#10b981" : "#475569", fontFamily: "'DM Mono', monospace" }}>{stages[stage].label}</span>
         <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 9, color: "#334155", fontFamily: "'DM Mono', monospace" }}>{stage + 1} / {stages.length}</span>
       </div>
