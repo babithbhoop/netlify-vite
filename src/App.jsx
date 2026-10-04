@@ -436,7 +436,7 @@ function AskMentorModal({ slideIndex, slideTotal, slide, onClose }) {
               style={{ padding: "11px 0", borderRadius: 9, border: "none", background: canSend ? "#2563EB" : "#1e293b", color: canSend ? "#fff" : "#475569", fontSize: 14, fontWeight: 800, cursor: canSend ? "pointer" : "not-allowed" }}>
               {status === "sending" ? "Sending..." : "Send to Babith"}
             </button>
-            <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>Only Babith can read what you send. Your name is remembered on this device for next time.</div>
+            <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>Only Babith sees your name. He may read your question out in the Q&A, without it. Your name is remembered on this device.</div>
           </div>
         )}
       </div>
@@ -632,6 +632,139 @@ function SelfPacedStrip({ text }) {
     <div style={{ flexShrink: 0, marginTop: 6, display: "flex", gap: 8, alignItems: "flex-start", padding: "6px 10px", borderRadius: 7, border: "1px solid #7c3aed50", background: "#7c3aed12" }}>
       <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.2, color: "#c4b5fd", background: "#7c3aed30", padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", fontFamily: "'DM Mono', monospace" }}>SELF-PACED · WHAT TO DO</span>
       <span style={{ fontSize: 10, color: "#ddd6fe", lineHeight: 1.5 }}>{text}</span>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FINAL SLIDE: YOUR QUESTIONS. Ask the Mentor submissions grouped into themed cards.
+// Content is presenter-only (passcode checked in the database). Everyone else sees a count.
+// ─────────────────────────────────────────────────────────────────────────────
+const RPC = (fn) => `https://acmdvqrbdomvjgyxnwgl.supabase.co/rest/v1/rpc/${fn}`;
+const rpc = async (fn, body) => {
+  const res = await fetch(RPC(fn), { method: "POST", headers: { "Content-Type": "application/json", apikey: ASK_KEY }, body: JSON.stringify(body) });
+  if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.status = res.status; throw e; }
+  const t = await res.text(); return t ? JSON.parse(t) : null;
+};
+const PASS_KEY = "masterclass_presenter_pass_v1";
+
+const THEMES = [
+  { key: "frontier", label: "Frontier AI & the opening story", c: "#f87171", words: ["hugging face", "openai", "anthropic", "agent", "mythos", "pause", "superintelligence", "bhasmasura", "frontier", "agi", "pacing", "glm", "sanders", "claude"] },
+  { key: "security", label: "Security & attacks", c: "#fb923c", words: ["security", "prompt injection", "inject", "attack", "hack", "jailbreak", "red team", "red-team", "guardrail", "garak", "breach", "malware", "cyber"] },
+  { key: "bias", label: "Bias & fairness", c: "#fbbf24", words: ["bias", "fair", "discriminat", "proctor", "audit", "caste", "gender", "equal", "proxy"] },
+  { key: "privacy", label: "Privacy & data", c: "#a78bfa", words: ["privacy", "consent", "anonym", "differential", "personal data", "pii", "cgpa", "epsilon", "data"] },
+  { key: "law", label: "Law & regulation", c: "#60a5fa", words: ["law", "legal", "regulat", "dpdp", "gdpr", "pipl", "ai act", "compliance", "fine", "liabil", "liable", "court", "copyright", "rights", "digital twin"] },
+  { key: "careers", label: "Careers & learning", c: "#34d399", words: ["career", "job", "role", "certif", "aigp", "cipp", "chief", "salary", "course", "learn", "become", "skill", "student"] },
+  { key: "startup", label: "Startups & small teams", c: "#2dd4bf", words: ["startup", "start-up", "small business", "sme", "founder", "budget", "cost", "small team"] },
+  { key: "governance", label: "Governance in practice", c: "#93c5fd", words: ["governance", "policy", "process", "owner", "accountab", "checklist", "model card", "roadmap", "framework", "implement", "organisation", "organization", "human in the loop", "oath", "inventory", " own the", "ownership", "who owns", "sign off", "sign-off"] },
+];
+const OTHER = { key: "other", label: "Other questions", c: "#94a3b8" };
+const FEEDBACK = { key: "feedback", label: "Feedback & suggestions", c: "#f472b6" };
+const themeOf = (q) => {
+  if (q.kind !== "question") return FEEDBACK;
+  const t = (q.message || "").toLowerCase();
+  return THEMES.find(th => th.words.some(w => t.includes(w))) || OTHER;
+};
+
+function QuestionsVisual() {
+  const [pass, setPass] = useState(() => { try { return sessionStorage.getItem(PASS_KEY) || ""; } catch { return ""; } });
+  const [input, setInput] = useState("");
+  const [rows, setRows] = useState(null);
+  const [count, setCount] = useState(null);
+  const [err, setErr] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [showNames, setShowNames] = useState(false);
+  const [hideAnswered, setHideAnswered] = useState(false);
+  const [copied, setCopied] = useState(null);
+
+  const load = async (p = pass) => {
+    if (!p) return;
+    try {
+      const data = await rpc("masterclass_list_questions", { p_pass: p, p_cohort: COHORT });
+      setRows(data || []); setErr("");
+      try { sessionStorage.setItem(PASS_KEY, p); } catch {}
+      setPass(p);
+    } catch (e) {
+      if (e.status === 401 || e.status === 403 || e.status === 400) { setErr("That passcode didn't work."); try { sessionStorage.removeItem(PASS_KEY); } catch {}; setPass(""); setRows(null); }
+      else setErr("Couldn't reach the question store. Check the connection and press Refresh.");
+    }
+  };
+  useEffect(() => {
+    rpc("masterclass_question_count", { p_cohort: COHORT }).then(setCount).catch(() => {});
+    if (pass) load(pass);
+  }, []);
+  useEffect(() => {
+    if (!pass) return;
+    const t = setInterval(() => load(pass), 20000);
+    return () => clearInterval(t);
+  }, [pass]);
+
+  const markAnswered = async (q) => {
+    setRows(rs => rs.map(r => r.id === q.id ? { ...r, answered: !q.answered } : r));
+    try { await rpc("masterclass_mark_answered", { p_pass: pass, p_id: q.id, p_answered: !q.answered }); }
+    catch { setRows(rs => rs.map(r => r.id === q.id ? { ...r, answered: q.answered } : r)); }
+  };
+  const copyCard = async (q) => {
+    const th = themeOf(q);
+    const txt = `Q&A card · ${th.label} · Slide ${q.slide_index + 1}: ${q.slide_title}\n${q.kind === "question" ? "Question" : q.kind[0].toUpperCase() + q.kind.slice(1)}: ${q.message}`;
+    try { await navigator.clipboard.writeText(txt); setCopied(q.id); setTimeout(() => setCopied(null), 1500); } catch {}
+  };
+
+  if (!rows) {
+    return (
+      <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, borderRadius: 14, border: "1px solid #1e293b", background: "#0a0f1c", padding: 20 }}>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 64, fontWeight: 900, color: "#60a5fa", lineHeight: 1 }}>{count ?? "·"}</div>
+        <div style={{ fontSize: 14, color: "#cbd5e1", textAlign: "center" }}>{count === 1 ? "question" : "questions"} sent through Ask the Mentor this session.<br /><span style={{ color: "#64748b", fontSize: 12 }}>Babith is choosing which to answer live. The rest get a personal reply.</span></div>
+        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load(input.trim())} type="password" placeholder="Presenter passcode"
+            style={{ padding: "8px 11px", borderRadius: 8, border: "1px solid #1e293b", background: "#07080f", color: "#e2e8f0", fontSize: 12, width: 190 }} />
+          <button onClick={() => load(input.trim())} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #2563EB", background: "#2563EB", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Unlock</button>
+        </div>
+        {err && <div style={{ fontSize: 11, color: "#fca5a5" }}>{err}</div>}
+      </div>
+    );
+  }
+
+  const visible = rows.filter(r => !(hideAnswered && r.answered));
+  const groups = [...THEMES, OTHER, FEEDBACK].map(th => ({ th, items: visible.filter(r => themeOf(r).key === th.key) })).filter(g => g.items.length);
+  const shown = filter === "all" ? visible : visible.filter(r => themeOf(r).key === filter);
+  const chip = (active, c) => ({ padding: "4px 9px", borderRadius: 999, border: `1px solid ${active ? c : "#1e293b"}`, background: active ? `${c}22` : "transparent", color: active ? c : "#94a3b8", fontSize: 10, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" });
+
+  return (
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 7, minHeight: 0 }}>
+      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
+        <button onClick={() => setFilter("all")} style={chip(filter === "all", "#e2e8f0")}>All · {visible.length}</button>
+        {groups.map(({ th, items }) => <button key={th.key} onClick={() => setFilter(th.key)} style={chip(filter === th.key, th.c)}>{th.label} · {items.length}</button>)}
+        <span style={{ flex: 1 }} />
+        <label style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><input type="checkbox" checked={showNames} onChange={e => setShowNames(e.target.checked)} />names</label>
+        <label style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><input type="checkbox" checked={hideAnswered} onChange={e => setHideAnswered(e.target.checked)} />hide answered</label>
+        <button onClick={() => load()} style={{ ...chip(false, "#60a5fa"), color: "#93c5fd" }}>Refresh</button>
+      </div>
+      {shown.length === 0 ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 13, border: "1px dashed #1e293b", borderRadius: 12 }}>No questions here yet. They refresh every 20 seconds.</div>
+      ) : (
+        <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 8, alignContent: "start", paddingRight: 2 }}>
+          {shown.map(q => {
+            const th = themeOf(q);
+            return (
+              <div key={q.id} style={{ borderRadius: 10, border: `1px solid ${th.c}50`, background: q.answered ? "#0a0f1c" : `${th.c}0d`, padding: "9px 10px", display: "flex", flexDirection: "column", gap: 6, opacity: q.answered ? 0.45 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.8, color: th.c, fontFamily: "'DM Mono', monospace", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.label}</span>
+                  <span style={{ fontSize: 8, color: "#64748b", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>Slide {q.slide_index + 1}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#f1f5f9", lineHeight: 1.45, flex: 1 }}>{q.message}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 9, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{showNames ? q.student_name : q.slide_title}</span>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button onClick={() => copyCard(q)} style={{ padding: "3px 7px", borderRadius: 6, border: "1px solid #334155", background: "transparent", color: copied === q.id ? "#86efac" : "#94a3b8", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>{copied === q.id ? "Copied" : "Copy"}</button>
+                    <button onClick={() => markAnswered(q)} style={{ padding: "3px 7px", borderRadius: 6, border: `1px solid ${q.answered ? "#16a34a" : "#334155"}`, background: q.answered ? "#16a34a22" : "transparent", color: q.answered ? "#86efac" : "#94a3b8", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>{q.answered ? "Answered" : "Mark answered"}</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -2094,7 +2227,7 @@ function Slide20Visual() {
 // SLIDES DATA
 // ─────────────────────────────────────────────────────────────────────────────
 // Live-run timings for the 45-minute content run (plus 15 min Q&A). null = self-paced slide.
-const SLIDE_MINUTES = [3,3,3,1,1,3,3,2,2,2,null,4,3,null,3,3,2,1,2,null,2,null,null,null,2];
+const SLIDE_MINUTES = [3,3,3,1,1,3,3,2,2,2,null,4,3,null,3,3,2,1,2,null,2,null,null,null,2,15];
 
 const slides = [
   { id:0, phase:1, phaseLabel:"Welcome", title:"Welcome. Here's How Today Works.", subtitle:"Who I am, how this app works, and how to ask a question without waiting until the end.", accent:"#2563EB", visual:"slide0",
@@ -2119,7 +2252,7 @@ const slides = [
     notes:{ core:"The data pipeline is where 90% of downstream bias is born and 90% of teams skip 80% of the steps. Ask anyone on your team: can you reproduce the training dataset you used 6 months ago, with the same exact records, in the same order? If not, you cannot audit, you cannot explain, and you cannot defend against a regulator who asks.", hook:"MIT Technology Review 2024: 67% of data scientists had insufficient time to document data provenance. The EU AI Act does not care about your sprint velocity. It cares about your audit trail.", interaction:"At which stage does your data pipeline stop? Be honest. Most teams skip Stage 5 entirely (versioning). If you cannot name the git commit hash of your training dataset, you are in Stage 1." }},
   { id:7, phase:2, phaseLabel:"Phase 2: The Framework", title:"Model Explainability", subtitle:"LIME. SHAP. Counterfactuals. Pick your weapon based on what you need to prove.", accent:"#2563EB", visual:"slide7", selfPaced:"Read the three cards. For each method, note one situation where you would use it. Start with SHAP: it gives every input a fair share of the credit for a decision, and its outputs hold up in regulatory submissions. Every link goes to the documentation.",
     notes:{ core:"The right explainability tool depends entirely on what question you are answering. If a regulator asks 'why was this specific loan denied?', counterfactuals are the only legally actionable format. If an engineer asks 'which features matter globally?', SHAP is the answer. If you need something fast during a demo, LIME. Most teams pick one and use it for everything. That is wrong.", hook:"", interaction:"" }},
-  { id:8, phase:2, phaseLabel:"Phase 2: The Framework", title:"Bias Audit: The AI Exam Proctor", subtitle:"Five clicks. Headline, split, harm, cause, decision. That is the whole method.", accent:"#EA580C", activity:true, visual:"slide8",
+  { id:8, phase:2, phaseLabel:"Phase 2: The Framework", title:"Bias Audit: The AI Exam Proctor", subtitle:"One question: accurate for whom? Five clicks to find out.", accent:"#EA580C", activity:true, visual:"slide8",
     notes:{ core:"Live walkthrough, five steps with Next step. Illustrative data: 1,000 students, 40 cheated. Broadband 600, mobile data 400. Overall 93.8% correct. Wrong flags on honest students: 2% broadband, 12% mobile data, so 46 of the 58 wrong accusations fall on the mobile-data group. Cause: freezes and audio drops read as looking away and another voice. Close on who signs off on the acceptable gap.", hook:"", interaction:"In the chat: type Y if you would sign off on this proctor at 94% accuracy. Then watch what the split shows." }},
   { id:9, phase:2, phaseLabel:"Phase 2: The Framework", title:"Differential Privacy: Steal a Classmate's CGPA", subtitle:"Two harmless averages, one subtraction. Then the fix.", accent:"#7c3aed", visual:"slide9",
     notes:{ core:"Live walkthrough, four steps. 40 students average 7.82, Aditi withdraws, 39 average 7.79, so Aditi = 40 x 7.82 - 39 x 7.79 = 8.99. Step 4 adds Laplace noise to each published average; drag towards More privacy and press Publish again to show the attack collapse while the average stays usable.", hook:"Apple uses differential privacy on keyboard data from your phone. The 2020 US Census used it to protect every household it counted.", interaction:"Before Step 3, try it in the chat: can you work out Aditi's CGPA from the two published averages?" }},
@@ -2147,6 +2280,8 @@ const slides = [
     notes:{ core:"Every tool on this slide is free, open source, and production-ready. There is no budget excuse for not using them. The IBM AIF360 documentation has worked examples for hiring, credit scoring, and recidivism - the three most common high-risk domains. Install it this week. Run it on your next model. Put the output in your model card.", hook:"", interaction:"" }},
   { id:20, phase:3, phaseLabel:"Phase 3: The Application", title:"The Oath of the Responsible Engineer", subtitle:"Six checks before you ship. Then your questions.", accent:"#2563EB", visual:"slide20",
     notes:{ core:"End with silence. Read the oath. Give the room 60 seconds of actual quiet. This session covered regulatory frameworks, technical tools, governance maturity models, and hands-on exercises. But none of it matters if engineers leave and go back to shipping systems they cannot explain, with data they cannot trace, owned by nobody. The oath is not performative. It is a reminder that every decision has a human on the other end of it.", hook:"", interaction:"" }},
+  { id:21, phase:3, phaseLabel:"Q&A", title:"Your Questions", subtitle:"Everything sent through Ask the Mentor, grouped by theme. Keep sending them.", accent:"#2563EB", visual:"slide21",
+    notes:{ core:"Presenter: unlock with the passcode. Pick a card, press Copy, paste it into Claude for a teleprompter answer. Mark answered as you go. Names are hidden on screen by default.", hook:"", interaction:"" }},
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2275,6 +2410,7 @@ function SurveyModal({ onClose, onSubmit }) {
 function SlideVisual({ type }) {
   const map = {
     slide0: <WelcomeVisual />,
+    slide21: <QuestionsVisual />,
     slide1: <Slide1Visual />,
     slide1a: <ParableVisual />,
     slide1b: <RevealVisual />,
