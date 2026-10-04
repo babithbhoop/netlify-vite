@@ -436,7 +436,7 @@ function AskMentorModal({ slideIndex, slideTotal, slide, onClose }) {
               style={{ padding: "11px 0", borderRadius: 9, border: "none", background: canSend ? "#2563EB" : "#1e293b", color: canSend ? "#fff" : "#475569", fontSize: 14, fontWeight: 800, cursor: canSend ? "pointer" : "not-allowed" }}>
               {status === "sending" ? "Sending..." : "Send to Babith"}
             </button>
-            <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>Only Babith sees your name. He may read your question out in the Q&A, without it. Your name is remembered on this device.</div>
+            <div style={{ fontSize: 10, color: "#475569", textAlign: "center" }}>Only Babith sees your name and your question. The last slide shows topics, never individual questions. Your name is remembered on this device.</div>
           </div>
         )}
       </div>
@@ -637,128 +637,75 @@ function SelfPacedStrip({ text }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FINAL SLIDE: YOUR QUESTIONS. Ask the Mentor submissions grouped into themed cards.
-// Content is presenter-only (passcode checked in the database). Everyone else sees a count.
+// FINAL SLIDE: WHAT YOU ASKED. Public. Questions are grouped into themes inside the
+// database; this slide only ever receives theme, count and slide numbers. No text, no names.
 // ─────────────────────────────────────────────────────────────────────────────
-const RPC = (fn) => `https://acmdvqrbdomvjgyxnwgl.supabase.co/rest/v1/rpc/${fn}`;
-const rpc = async (fn, body) => {
-  const res = await fetch(RPC(fn), { method: "POST", headers: { "Content-Type": "application/json", apikey: ASK_KEY }, body: JSON.stringify(body) });
-  if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.status = res.status; throw e; }
-  const t = await res.text(); return t ? JSON.parse(t) : null;
-};
-const PASS_KEY = "masterclass_presenter_pass_v1";
-
-const THEMES = [
-  { key: "frontier", label: "Frontier AI & the opening story", c: "#f87171", words: ["hugging face", "openai", "anthropic", "agent", "mythos", "pause", "superintelligence", "bhasmasura", "frontier", "agi", "pacing", "glm", "sanders", "claude"] },
-  { key: "security", label: "Security & attacks", c: "#fb923c", words: ["security", "prompt injection", "inject", "attack", "hack", "jailbreak", "red team", "red-team", "guardrail", "garak", "breach", "malware", "cyber"] },
-  { key: "bias", label: "Bias & fairness", c: "#fbbf24", words: ["bias", "fair", "discriminat", "proctor", "audit", "caste", "gender", "equal", "proxy"] },
-  { key: "privacy", label: "Privacy & data", c: "#a78bfa", words: ["privacy", "consent", "anonym", "differential", "personal data", "pii", "cgpa", "epsilon", "data"] },
-  { key: "law", label: "Law & regulation", c: "#60a5fa", words: ["law", "legal", "regulat", "dpdp", "gdpr", "pipl", "ai act", "compliance", "fine", "liabil", "liable", "court", "copyright", "rights", "digital twin"] },
-  { key: "careers", label: "Careers & learning", c: "#34d399", words: ["career", "job", "role", "certif", "aigp", "cipp", "chief", "salary", "course", "learn", "become", "skill", "student"] },
-  { key: "startup", label: "Startups & small teams", c: "#2dd4bf", words: ["startup", "start-up", "small business", "sme", "founder", "budget", "cost", "small team"] },
-  { key: "governance", label: "Governance in practice", c: "#93c5fd", words: ["governance", "policy", "process", "owner", "accountab", "checklist", "model card", "roadmap", "framework", "implement", "organisation", "organization", "human in the loop", "oath", "inventory", " own the", "ownership", "who owns", "sign off", "sign-off"] },
-];
-const OTHER = { key: "other", label: "Other questions", c: "#94a3b8" };
-const FEEDBACK = { key: "feedback", label: "Feedback & suggestions", c: "#f472b6" };
-const themeOf = (q) => {
-  if (q.kind !== "question") return FEEDBACK;
-  const t = (q.message || "").toLowerCase();
-  return THEMES.find(th => th.words.some(w => t.includes(w))) || OTHER;
+const TOPIC_RPC = "https://acmdvqrbdomvjgyxnwgl.supabase.co/rest/v1/rpc/masterclass_topic_summary";
+const TOPICS = {
+  frontier:   { c: "#f87171", title: "Who controls frontier AI, and can anyone hit pause?", covers: "The Hugging Face incident, who is accountable when the builder can't undo it, Pacing the Frontier, and whether a pause could actually work." },
+  security:   { c: "#fb923c", title: "How do you protect an AI system from attack?", covers: "Prompt injection in the real world, giving agents the least access they need, guardrails, and red-teaming before you ship." },
+  bias:       { c: "#fbbf24", title: "How do you check an AI is fair, even one you didn't build?", covers: "Splitting results by group, proxies like PIN code that stand in for caste or income, and who signs off on an acceptable gap." },
+  privacy:    { c: "#a78bfa", title: "How much privacy is enough?", covers: "Consent, why stripping names isn't anonymisation, differential privacy trade-offs, and what DPDP expects of you." },
+  law:        { c: "#60a5fa", title: "What does the law actually ask of you?", covers: "When the EU AI Act reaches you from India, DPDP obligations, why the deployer carries the liability, and what terms and conditions can't do." },
+  careers:    { c: "#34d399", title: "How do you build a career in AI governance?", covers: "The roles that are growing, which certifications are worth it, and how to combine technical depth with governance fluency." },
+  startup:    { c: "#2dd4bf", title: "Responsible AI on a small team's budget", covers: "Minimum viable governance, the free tools worth installing first, and what to put off until you're bigger." },
+  governance: { c: "#93c5fd", title: "Making governance real inside an organisation", covers: "The AI inventory, named owners, a gate before deployment, and getting leadership to care before something breaks." },
+  other:      { c: "#cbd5e1", title: "Your wider questions about AI", covers: "Bigger-picture questions about where AI is heading and what it means for work, learning and society." },
 };
 
-function QuestionsVisual() {
-  const [pass, setPass] = useState(() => { try { return sessionStorage.getItem(PASS_KEY) || ""; } catch { return ""; } });
-  const [input, setInput] = useState("");
+function TopicsVisual() {
   const [rows, setRows] = useState(null);
-  const [count, setCount] = useState(null);
-  const [err, setErr] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [showNames, setShowNames] = useState(false);
-  const [hideAnswered, setHideAnswered] = useState(false);
+  const [err, setErr] = useState(false);
   const [copied, setCopied] = useState(null);
-
-  const load = async (p = pass) => {
-    if (!p) return;
+  const load = async () => {
     try {
-      const data = await rpc("masterclass_list_questions", { p_pass: p, p_cohort: COHORT });
-      setRows(data || []); setErr("");
-      try { sessionStorage.setItem(PASS_KEY, p); } catch {}
-      setPass(p);
-    } catch (e) {
-      if (e.status === 401 || e.status === 403 || e.status === 400) { setErr("That passcode didn't work."); try { sessionStorage.removeItem(PASS_KEY); } catch {}; setPass(""); setRows(null); }
-      else setErr("Couldn't reach the question store. Check the connection and press Refresh.");
-    }
+      const res = await fetch(TOPIC_RPC, { method: "POST", headers: { "Content-Type": "application/json", apikey: ASK_KEY }, body: JSON.stringify({ p_cohort: COHORT }) });
+      if (!res.ok) throw new Error();
+      setRows(await res.json()); setErr(false);
+    } catch { setErr(true); }
   };
-  useEffect(() => {
-    rpc("masterclass_question_count", { p_cohort: COHORT }).then(setCount).catch(() => {});
-    if (pass) load(pass);
-  }, []);
-  useEffect(() => {
-    if (!pass) return;
-    const t = setInterval(() => load(pass), 20000);
-    return () => clearInterval(t);
-  }, [pass]);
+  useEffect(() => { load(); const t = setInterval(load, 20000); return () => clearInterval(t); }, []);
 
-  const markAnswered = async (q) => {
-    setRows(rs => rs.map(r => r.id === q.id ? { ...r, answered: !q.answered } : r));
-    try { await rpc("masterclass_mark_answered", { p_pass: pass, p_id: q.id, p_answered: !q.answered }); }
-    catch { setRows(rs => rs.map(r => r.id === q.id ? { ...r, answered: q.answered } : r)); }
+  const topics = (rows || []).filter(r => r.theme !== "feedback" && TOPICS[r.theme]);
+  const totalQ = topics.reduce((a, r) => a + r.n, 0);
+  const fb = (rows || []).find(r => r.theme === "feedback");
+  const copy = async (r) => {
+    const t = TOPICS[r.theme];
+    const txt = `Q&A topic: ${t.title}\nQuestions on this topic: ${r.n}\nCovers: ${t.covers}\nFrom slides: ${r.slides.map(s => s + 1).join(", ")}`;
+    try { await navigator.clipboard.writeText(txt); setCopied(r.theme); setTimeout(() => setCopied(null), 1500); } catch {}
   };
-  const copyCard = async (q) => {
-    const th = themeOf(q);
-    const txt = `Q&A card · ${th.label} · Slide ${q.slide_index + 1}: ${q.slide_title}\n${q.kind === "question" ? "Question" : q.kind[0].toUpperCase() + q.kind.slice(1)}: ${q.message}`;
-    try { await navigator.clipboard.writeText(txt); setCopied(q.id); setTimeout(() => setCopied(null), 1500); } catch {}
-  };
-
-  if (!rows) {
-    return (
-      <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, borderRadius: 14, border: "1px solid #1e293b", background: "#0a0f1c", padding: 20 }}>
-        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 64, fontWeight: 900, color: "#60a5fa", lineHeight: 1 }}>{count ?? "·"}</div>
-        <div style={{ fontSize: 14, color: "#cbd5e1", textAlign: "center" }}>{count === 1 ? "question" : "questions"} sent through Ask the Mentor this session.<br /><span style={{ color: "#64748b", fontSize: 12 }}>Babith is choosing which to answer live. The rest get a personal reply.</span></div>
-        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load(input.trim())} type="password" placeholder="Presenter passcode"
-            style={{ padding: "8px 11px", borderRadius: 8, border: "1px solid #1e293b", background: "#07080f", color: "#e2e8f0", fontSize: 12, width: 190 }} />
-          <button onClick={() => load(input.trim())} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #2563EB", background: "#2563EB", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Unlock</button>
-        </div>
-        {err && <div style={{ fontSize: 11, color: "#fca5a5" }}>{err}</div>}
-      </div>
-    );
-  }
-
-  const visible = rows.filter(r => !(hideAnswered && r.answered));
-  const groups = [...THEMES, OTHER, FEEDBACK].map(th => ({ th, items: visible.filter(r => themeOf(r).key === th.key) })).filter(g => g.items.length);
-  const shown = filter === "all" ? visible : visible.filter(r => themeOf(r).key === filter);
-  const chip = (active, c) => ({ padding: "4px 9px", borderRadius: 999, border: `1px solid ${active ? c : "#1e293b"}`, background: active ? `${c}22` : "transparent", color: active ? c : "#94a3b8", fontSize: 10, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" });
 
   return (
-    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 7, minHeight: 0 }}>
-      <div style={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "center" }}>
-        <button onClick={() => setFilter("all")} style={chip(filter === "all", "#e2e8f0")}>All · {visible.length}</button>
-        {groups.map(({ th, items }) => <button key={th.key} onClick={() => setFilter(th.key)} style={chip(filter === th.key, th.c)}>{th.label} · {items.length}</button>)}
-        <span style={{ flex: 1 }} />
-        <label style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><input type="checkbox" checked={showNames} onChange={e => setShowNames(e.target.checked)} />names</label>
-        <label style={{ fontSize: 10, color: "#94a3b8", display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}><input type="checkbox" checked={hideAnswered} onChange={e => setHideAnswered(e.target.checked)} />hide answered</label>
-        <button onClick={() => load()} style={{ ...chip(false, "#60a5fa"), color: "#93c5fd" }}>Refresh</button>
+    <div style={{ width: "100%", marginTop: 6, flex: 1, display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 12px", borderRadius: 10, border: "1px solid #1e3a8a", background: "#2563EB10" }}>
+        <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 900, color: "#60a5fa", lineHeight: 1 }}>{rows ? totalQ : "·"}</span>
+        <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1 }}>{totalQ === 1 ? "question" : "questions"} so far, grouped into {topics.length} {topics.length === 1 ? "topic" : "topics"}{fb ? `, plus ${fb.n} ${fb.n === 1 ? "piece" : "pieces"} of feedback` : ""}. <span style={{ color: "#64748b" }}>Individual questions and names stay private. Updates every 20 seconds.</span></span>
+        <button onClick={load} style={{ padding: "4px 10px", borderRadius: 999, border: "1px solid #2563EB", background: "transparent", color: "#93c5fd", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>Refresh</button>
       </div>
-      {shown.length === 0 ? (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 13, border: "1px dashed #1e293b", borderRadius: 12 }}>No questions here yet. They refresh every 20 seconds.</div>
+      {err && !rows ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#fca5a5", fontSize: 13, border: "1px dashed #7f1d1d", borderRadius: 12 }}>Couldn't load the topics. Check the connection and press Refresh.</div>
+      ) : topics.length === 0 ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, color: "#64748b", fontSize: 13, border: "1px dashed #1e293b", borderRadius: 12, textAlign: "center", padding: 20 }}>
+          <span>{rows ? "No questions yet." : "Loading..."}</span>
+          <span style={{ fontSize: 11 }}>Click Ask the Mentor, bottom right, and your question will help shape what we discuss.</span>
+        </div>
       ) : (
-        <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 8, alignContent: "start", paddingRight: 2 }}>
-          {shown.map(q => {
-            const th = themeOf(q);
+        <div style={{ flex: 1, overflowY: "auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 8, alignContent: "start" }}>
+          {topics.map((r, i) => {
+            const t = TOPICS[r.theme];
+            const share = totalQ ? Math.round((r.n / totalQ) * 100) : 0;
             return (
-              <div key={q.id} style={{ borderRadius: 10, border: `1px solid ${th.c}50`, background: q.answered ? "#0a0f1c" : `${th.c}0d`, padding: "9px 10px", display: "flex", flexDirection: "column", gap: 6, opacity: q.answered ? 0.45 : 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 6, alignItems: "center" }}>
-                  <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: 0.8, color: th.c, fontFamily: "'DM Mono', monospace", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.label}</span>
-                  <span style={{ fontSize: 8, color: "#64748b", fontFamily: "'DM Mono', monospace", whiteSpace: "nowrap" }}>Slide {q.slide_index + 1}</span>
-                </div>
-                <div style={{ fontSize: 12, color: "#f1f5f9", lineHeight: 1.45, flex: 1 }}>{q.message}</div>
+              <div key={r.theme} style={{ borderRadius: 12, border: `1px solid ${t.c}55`, background: `${t.c}0d`, padding: "11px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 9, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{showNames ? q.student_name : q.slide_title}</span>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => copyCard(q)} style={{ padding: "3px 7px", borderRadius: 6, border: "1px solid #334155", background: "transparent", color: copied === q.id ? "#86efac" : "#94a3b8", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>{copied === q.id ? "Copied" : "Copy"}</button>
-                    <button onClick={() => markAnswered(q)} style={{ padding: "3px 7px", borderRadius: 6, border: `1px solid ${q.answered ? "#16a34a" : "#334155"}`, background: q.answered ? "#16a34a22" : "transparent", color: q.answered ? "#86efac" : "#94a3b8", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>{q.answered ? "Answered" : "Mark answered"}</button>
-                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1, color: t.c, fontFamily: "'DM Mono', monospace" }}>{i === 0 ? "MOST ASKED" : `TOPIC ${i + 1}`}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: "#f1f5f9", background: `${t.c}30`, padding: "2px 8px", borderRadius: 999 }}>{r.n} {r.n === 1 ? "question" : "questions"}</span>
+                </div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 16, fontWeight: 800, color: "#f8fafc", lineHeight: 1.25 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: "#cbd5e1", lineHeight: 1.5, flex: 1 }}>{t.covers}</div>
+                <div style={{ height: 4, borderRadius: 9999, background: "#1e293b" }}><div style={{ width: `${share}%`, height: 4, borderRadius: 9999, background: t.c }} /></div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 9, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>From slide{r.slides.length > 1 ? "s" : ""} {r.slides.map(s => s + 1).join(", ")}</span>
+                  <button onClick={() => copy(r)} style={{ padding: "3px 8px", borderRadius: 6, border: "1px solid #334155", background: "transparent", color: copied === r.theme ? "#86efac" : "#94a3b8", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>{copied === r.theme ? "Copied" : "Copy topic"}</button>
                 </div>
               </div>
             );
@@ -2280,8 +2227,8 @@ const slides = [
     notes:{ core:"Every tool on this slide is free, open source, and production-ready. There is no budget excuse for not using them. The IBM AIF360 documentation has worked examples for hiring, credit scoring, and recidivism - the three most common high-risk domains. Install it this week. Run it on your next model. Put the output in your model card.", hook:"", interaction:"" }},
   { id:20, phase:3, phaseLabel:"Phase 3: The Application", title:"The Oath of the Responsible Engineer", subtitle:"Six checks before you ship. Then your questions.", accent:"#2563EB", visual:"slide20",
     notes:{ core:"End with silence. Read the oath. Give the room 60 seconds of actual quiet. This session covered regulatory frameworks, technical tools, governance maturity models, and hands-on exercises. But none of it matters if engineers leave and go back to shipping systems they cannot explain, with data they cannot trace, owned by nobody. The oath is not performative. It is a reminder that every decision has a human on the other end of it.", hook:"", interaction:"" }},
-  { id:21, phase:3, phaseLabel:"Q&A", title:"Your Questions", subtitle:"Everything sent through Ask the Mentor, grouped by theme. Keep sending them.", accent:"#2563EB", visual:"slide21",
-    notes:{ core:"Presenter: unlock with the passcode. Pick a card, press Copy, paste it into Claude for a teleprompter answer. Mark answered as you go. Names are hidden on screen by default.", hook:"", interaction:"" }},
+  { id:21, phase:3, phaseLabel:"Q&A", title:"What You Asked", subtitle:"Your questions, grouped into the topics we'll discuss. Questions and names stay private.", accent:"#2563EB", visual:"slide21",
+    notes:{ core:"Public slide. Themes are computed in the database and only theme, count and slide numbers come back. Pick a topic card, press Copy topic, paste into Claude for a teleprompter answer. Full questions are in Supabase, table masterclass_questions.", hook:"", interaction:"" }},
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2410,7 +2357,7 @@ function SurveyModal({ onClose, onSubmit }) {
 function SlideVisual({ type }) {
   const map = {
     slide0: <WelcomeVisual />,
-    slide21: <QuestionsVisual />,
+    slide21: <TopicsVisual />,
     slide1: <Slide1Visual />,
     slide1a: <ParableVisual />,
     slide1b: <RevealVisual />,
